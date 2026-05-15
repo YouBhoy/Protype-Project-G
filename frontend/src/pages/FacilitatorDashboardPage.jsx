@@ -5,13 +5,35 @@ import { StatCard } from '../components/StatCard';
 import { RiskBadge } from '../components/RiskBadge';
 import { LineTrendChart } from '../components/charts/LineTrendChart';
 import { DoughnutChart } from '../components/charts/DoughnutChart';
+import { ChatButton } from '../components/ChatButton';
+import { ChatPanel } from '../components/ChatPanel';
+import { ConversationList } from '../components/ConversationList';
+import { useAuth } from '../contexts/AuthContext';
+import { initializeSocket } from '../socket';
 
 export function FacilitatorDashboardPage() {
+  const { user, token } = useAuth();
   const [data, setData] = useState(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState(null);
 
   useEffect(() => {
     api.get('/facilitator/dashboard').then(setData).catch(() => null);
-  }, []);
+
+    // Initialize Socket.io connection
+    if (token) {
+      initializeSocket(token);
+    }
+  }, [token]);
+
+  const handleSelectConversation = (conversation) => {
+    setSelectedConversation(conversation);
+    setIsChatOpen(true);
+  };
+
+  const selectedConversationName = selectedConversation?.student_name
+    || [selectedConversation?.first_name, selectedConversation?.last_name].filter(Boolean).join(' ')
+    || 'Student';
 
   return (
     <div className="centered-container">
@@ -117,6 +139,35 @@ export function FacilitatorDashboardPage() {
           </div>
         </article>
       </section>
+
+        <section className="panel-grid">
+          <article className="data-panel">
+            <ConversationList
+              onSelectConversation={handleSelectConversation}
+              selectedStudentId={selectedConversation?.student_id}
+            />
+          </article>
+        </section>
+
+        {/* Chat Button */}
+        <ChatButton onClick={() => setIsChatOpen(true)} />
+
+        {/* Chat Panel */}
+        {user && selectedConversation && (
+          <ChatPanel
+            studentId={selectedConversation.student_id}
+            facilitatorId={user.id}
+            currentUserId={user.id}
+            currentUserRole={user.role}
+            studentName={selectedConversationName}
+            facilitatorName="You"
+            isOpen={isChatOpen}
+            onClose={() => {
+              setIsChatOpen(false);
+              setSelectedConversation(null);
+            }}
+          />
+        )}
     </div>
   );
 }
