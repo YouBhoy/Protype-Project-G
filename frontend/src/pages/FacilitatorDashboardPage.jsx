@@ -14,14 +14,24 @@ export function FacilitatorDashboardPage() {
   }, []);
 
   return (
-    <div className="page-stack">
-      <header className="page-header">
-        <div>
-          <p className="eyebrow">OGC facilitator dashboard</p>
-          <h1>Identify students who need attention now</h1>
+    <div className="centered-container">
+      <div className="facilitator-header">
+        <div className="facilitator-header-top">
+          <div className="facilitator-header-title">
+            <h1>OGC Facilitator Dashboard</h1>
+            <div className="facilitator-header-meta">
+              <p><strong>Scope:</strong> College of Engineering</p>
+            </div>
+          </div>
+          <button className="btn btn-primary" style={{ whiteSpace: 'nowrap' }}>Load Analytics</button>
         </div>
-        <Link className="btn btn-primary" to="/facilitator/appointments">Manage availability</Link>
-      </header>
+        <div className="tab-row">
+          <button className="tab active">Analytics</button>
+          <button className="tab">Slots</button>
+          <button className="tab">Appointments</button>
+          <button className="tab">Emergency Contacts</button>
+        </div>
+      </div>
 
       <section className="metrics-grid">
         <StatCard label="Monitored students" value={data?.totals?.totalStudents || 0} tone="primary" />

@@ -30,6 +30,7 @@ export default function App() {
         <Route path="ogc/signup" element={<FacilitatorSignupPage />} />
         <Route path="ogc/register" element={<FacilitatorSignupPage />} />
         <Route path="resources" element={<EmergencyResourcesPage />} />
+        <Route path="emergency-resources" element={<EmergencyResourcesPage />} />
       </Route>
 
       <Route path="student/consent" element={<ConsentRoute><ConsentPage /></ConsentRoute>} />
@@ -40,11 +41,13 @@ export default function App() {
         <Route path="student/appointments" element={<AppointmentsPage />} />
         <Route path="student/assessments" element={<AssessmentPage />} />
         <Route path="student/assessments/:type" element={<AssessmentPage />} />
+        <Route path="student/resources" element={<EmergencyResourcesPage />} />
       </Route>
 
       <Route element={<PrivateRoute role="ogc"><PortalLayout /></PrivateRoute>}>
         <Route path="facilitator/dashboard" element={<FacilitatorDashboardPage />} />
         <Route path="facilitator/appointments" element={<FacilitatorAppointmentsPage />} />
+        <Route path="facilitator/resources" element={<EmergencyResourcesPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

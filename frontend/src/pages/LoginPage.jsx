@@ -15,6 +15,22 @@ export function LoginPage() {
     setLoading(true);
     setError('');
 
+    // Basic client-side validation
+    if (mode === 'student' && !form.studentId.trim()) {
+      setError('Student ID is required');
+      setLoading(false);
+      return;
+    }
+    if (mode === 'ogc' && !form.email.trim()) {
+      setError('Email is required');
+      setLoading(false);
+      return;
+    }
+    if (!form.password) {
+      setError('Password is required');
+      setLoading(false);
+      return;
+    }
     try {
       const user = mode === 'student'
         ? await auth.loginStudent({ studentId: form.studentId, password: form.password })
