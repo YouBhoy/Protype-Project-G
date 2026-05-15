@@ -1,0 +1,14 @@
+{
+  "name": "spartang-prototype",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace backend",
+    "start": "npm run start --workspace backend",
+    "build": "npm run build --workspace frontend"
+  }
+}

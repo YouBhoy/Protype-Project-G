@@ -1,0 +1,143 @@
+CREATE DATABASE IF NOT EXISTS spartang1;
+USE spartang1;
+
+CREATE TABLE IF NOT EXISTS students (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_id VARCHAR(40) NOT NULL UNIQUE,
+  name VARCHAR(120) NOT NULL,
+  email VARCHAR(150) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  college VARCHAR(120) NOT NULL,
+  year_level VARCHAR(50) NOT NULL,
+  sex VARCHAR(20) NOT NULL,
+  consent_flag TINYINT(1) NOT NULL DEFAULT 0,
+  consent_at DATETIME NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS facilitators (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  email VARCHAR(150) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  assigned_college VARCHAR(120) NOT NULL,
+  role VARCHAR(20) NOT NULL DEFAULT 'ogc',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS assessments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_id INT NOT NULL,
+  assessment_type VARCHAR(30) NOT NULL,
+  total_score DECIMAL(8,2) NOT NULL,
+  risk_level VARCHAR(20) NOT NULL,
+  recommendation VARCHAR(255) NOT NULL,
+  submitted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_assessments_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS dass21_responses (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  assessment_id INT NOT NULL UNIQUE,
+  responses_json JSON NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_dass21_assessment FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS phq9_responses (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  assessment_id INT NOT NULL UNIQUE,
+  responses_json JSON NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_phq9_assessment FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS gad7_responses (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  assessment_id INT NOT NULL UNIQUE,
+  responses_json JSON NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_gad7_assessment FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS esm_entries (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  assessment_id INT NOT NULL UNIQUE,
+  mood_score INT NOT NULL,
+  energy_score INT NOT NULL,
+  stress_score INT NOT NULL,
+  sleep_score INT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_esm_assessment FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS risk_classifications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_id INT NOT NULL,
+  assessment_id INT NOT NULL,
+  risk_level VARCHAR(20) NOT NULL,
+  risk_reason VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_risk_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+  CONSTRAINT fk_risk_assessment FOREIGN KEY (assessment_id) REFERENCES assessments(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS availability_slots (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  facilitator_id INT NOT NULL,
+  slot_date DATE NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'open',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_availability_facilitator FOREIGN KEY (facilitator_id) REFERENCES facilitators(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS appointments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  student_id INT NOT NULL,
+  facilitator_id INT NOT NULL,
+  availability_slot_id INT NULL,
+  purpose VARCHAR(255) NOT NULL,
+  scheduled_at DATETIME NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  notes TEXT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_appointments_student FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+  CONSTRAINT fk_appointments_facilitator FOREIGN KEY (facilitator_id) REFERENCES facilitators(id) ON DELETE CASCADE,
+  CONSTRAINT fk_appointments_slot FOREIGN KEY (availability_slot_id) REFERENCES availability_slots(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  recipient_type VARCHAR(20) NOT NULL,
+  recipient_id INT NOT NULL,
+  notification_type VARCHAR(50) NOT NULL,
+  message VARCHAR(255) NOT NULL,
+  channel VARCHAR(20) NOT NULL DEFAULT 'in-app',
+  status VARCHAR(20) NOT NULL DEFAULT 'queued',
+  metadata_json JSON NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS emergency_contacts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(120) NOT NULL,
+  organization VARCHAR(120) NOT NULL,
+  phone VARCHAR(50) NOT NULL,
+  description VARCHAR(255) NOT NULL,
+  is_critical TINYINT(1) NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_assessments_student_type ON assessments(student_id, assessment_type, submitted_at DESC);
+CREATE INDEX idx_appointments_facilitator_status ON appointments(facilitator_id, status, scheduled_at);
+CREATE INDEX idx_students_college ON students(college);
