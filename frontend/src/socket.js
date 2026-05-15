@@ -5,6 +5,11 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 let socket = null;
 
 export function initializeSocket(token) {
+  if (!token) {
+    console.warn('initializeSocket called without token; skipping socket initialization');
+    return null;
+  }
+
   if (socket && socket.connected) {
     return socket;
   }
