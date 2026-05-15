@@ -29,6 +29,21 @@ export function AssessmentForm({ definition, onSubmit, submitting }) {
 
   function handleSubmit(event) {
     event.preventDefault();
+    console.log('AssessmentForm handleSubmit called — responses:', responses, 'definition:', definition);
+    if (typeof onSubmit !== 'function') {
+      // Defensive: surface the problem immediately in dev
+      console.error('onSubmit prop is missing or not a function');
+      alert('Submit handler not available — please refresh or contact support.');
+      return;
+    }
+
+    const total = definition.key === 'esm' ? definition.fields.length : definition.questions.length;
+    const answered = answeredCount;
+    if (answered < total) {
+      alert(`Please answer all ${total} questions before submitting. (${answered}/${total} answered)`);
+      return;
+    }
+
     onSubmit(responses);
   }
 
@@ -57,8 +72,8 @@ export function AssessmentForm({ definition, onSubmit, submitting }) {
       ) : (
         <div className="question-list">
           {definition.questions.map((question, index) => (
-            <fieldset key={question} className="question-card">
-              <legend>{index + 1}. {question}</legend>
+            <div key={question} className="question-card">
+              <p className="question-title">{index + 1}. {question}</p>
               <div className="choice-row">
                 {definition.options.map((option) => (
                   <label key={option.value} className="choice-pill">
@@ -66,14 +81,14 @@ export function AssessmentForm({ definition, onSubmit, submitting }) {
                       type="radio"
                       name={`q-${index}`}
                       value={option.value}
-                      checked={responses[index] === option.value}
+                      checked={String(responses[index]) === String(option.value)}
                       onChange={(event) => updateArray(index, event.target.value)}
                     />
                     <span>{option.value}</span>
                   </label>
                 ))}
               </div>
-            </fieldset>
+            </div>
           ))}
         </div>
       )}

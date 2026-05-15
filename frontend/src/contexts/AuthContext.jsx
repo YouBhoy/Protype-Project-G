@@ -20,10 +20,16 @@ export function AuthProvider({ children }) {
           setUser(data.user);
         }
       })
-      .catch(() => {
-        localStorage.removeItem('spartang_token');
-        setToken('');
-        setUser(null);
+      .catch((err) => {
+        const msg = String(err?.message || '');
+        // Only clear local token on explicit authentication errors (invalid/expired/unauthorized).
+        // Preserve the token for transient network/server failures so navigation to public pages
+        // (like Emergency Resources) does not sign the user out.
+        if (/invalid|expired|unauthorized|401|403|authentication/i.test(msg)) {
+          localStorage.removeItem('spartang_token');
+          setToken('');
+          setUser(null);
+        }
       })
       .finally(() => {
         if (active) {
