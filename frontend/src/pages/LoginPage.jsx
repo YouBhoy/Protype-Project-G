@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 export function LoginPage() {
+  const [tab, setTab] = useState('login');
   const [mode, setMode] = useState('student');
   const [form, setForm] = useState({ studentId: '', email: '', password: '' });
   const [error, setError] = useState('');
@@ -47,14 +48,42 @@ export function LoginPage() {
   return (
     <main className="auth-page">
       <section className="auth-card">
-        <p className="eyebrow">Secure access</p>
-        <h1>Login to SPARTAN-G</h1>
-        <div className="toggle-row">
-          <button className={mode === 'student' ? 'toggle active' : 'toggle'} onClick={() => setMode('student')} type="button">Student</button>
-          <button className={mode === 'ogc' ? 'toggle active' : 'toggle'} onClick={() => setMode('ogc')} type="button">OGC</button>
+        {/* Red Header Section */}
+        <div className="auth-card-header">
+          <img src="https://www.nutritionmasterclass.com.ph/sites/default/files/2023-03/Batangas%20State%20University.jpg" alt="BSU Seal" className="auth-card-seal" />
+          <h2 className="auth-card-title">SPARTAN-G Portal</h2>
+          <p className="auth-card-subtitle">Student assessment and OGC facilitator prototype portal.</p>
         </div>
 
-        <form className="stack" onSubmit={handleSubmit}>
+        {/* Tab Navigation */}
+        <div className="auth-card-tabs">
+          <button
+            className={tab === 'login' ? 'auth-tab active' : 'auth-tab'}
+            onClick={() => setTab('login')}
+            type="button"
+          >
+            Login
+          </button>
+          <button
+            className={tab === 'signup' ? 'auth-tab active' : 'auth-tab'}
+            onClick={() => setTab('signup')}
+            type="button"
+          >
+            Sign Up
+          </button>
+        </div>
+
+        {/* Login Form */}
+        {tab === 'login' ? (
+          <form className="stack" onSubmit={handleSubmit}>
+            {/* Login As Dropdown */}
+            <label className="input-block">
+              <span>Login As</span>
+              <select value={mode} onChange={(e) => setMode(e.target.value)} className="login-dropdown">
+                <option value="student">Student</option>
+                <option value="ogc">OGC Facilitator</option>
+              </select>
+            </label>
           {mode === 'student' ? (
             <label className="input-block">
               <span>Student ID</span>
@@ -74,15 +103,17 @@ export function LoginPage() {
 
           {error ? <p className="error-text">{error}</p> : null}
           <button className="btn btn-primary" type="submit" disabled={loading}>{loading ? 'Signing in...' : 'Sign in'}</button>
+          <p className="login-mode-text">Current login mode: {mode === 'student' ? 'Student' : 'OGC'}</p>
         </form>
-
-        <div className="stack" style={{ marginTop: '18px' }}>
-          <p className="muted">Need an account?</p>
-          <div className="button-row">
-            <Link className="btn btn-secondary" to="/signup">Student registration</Link>
-            <Link className="btn btn-secondary" to="/facilitator/signup">OGC registration</Link>
+      ) : (
+        <div className="auth-signup-redirect">
+          <p>Choose your registration path:</p>
+          <div className="signup-button-row">
+            <Link className="btn btn-primary" to="/signup">Student Registration</Link>
+            <Link className="btn btn-primary" to="/facilitator/signup">OGC Registration</Link>
           </div>
         </div>
+      )}
       </section>
     </main>
   );

@@ -8,17 +8,17 @@ export function PortalLayout() {
   const resourcesPath = user?.role === 'ogc' ? '/facilitator/resources' : '/student/resources';
 
   const studentLinks = [
-    { to: 'dashboard', label: 'Dashboard' },
-    { to: 'assessments', label: 'Assessments' },
-    { to: 'analytics', label: 'Analytics' },
-    { to: 'appointments', label: 'Appointments' },
-    { to: 'chat', label: 'Chat' }
+    { to: '/student/dashboard', label: 'Dashboard' },
+    { to: '/student/assessments', label: 'Assessments' },
+    { to: '/student/analytics', label: 'Analytics' },
+    { to: '/student/appointments', label: 'Appointments' },
+    { to: '/student/chat', label: 'Chat' }
   ];
 
   const facilitatorLinks = [
-    { to: 'dashboard', label: 'Dashboard' },
-    { to: 'appointments', label: 'Appointments' },
-    { to: 'chat', label: 'Chat' }
+    { to: '/facilitator/dashboard', label: 'Dashboard' },
+    { to: '/facilitator/appointments', label: 'Appointments' },
+    { to: '/facilitator/chat', label: 'Chat' }
   ];
 
   const links = user?.role === 'ogc' ? facilitatorLinks : studentLinks;
@@ -32,7 +32,7 @@ export function PortalLayout() {
     <div className="shell">
       <aside className="sidebar">
         <Link to="/" className="brand-block">
-          <span className="brand-mark">B</span>
+          <img src="https://www.nutritionmasterclass.com.ph/sites/default/files/2023-03/Batangas%20State%20University.jpg" alt="BSU Seal" className="brand-mark" />
           <span>
             <strong>SPARTAN-G</strong>
             <small>Wellness monitoring</small>
@@ -62,7 +62,7 @@ export function PortalLayout() {
 
       <header className="portal-header">
         <div className="portal-header-brand">
-          <div className="portal-header-seal">B</div>
+          <img src="https://www.nutritionmasterclass.com.ph/sites/default/files/2023-03/Batangas%20State%20University.jpg" alt="BSU Seal" className="portal-header-seal" />
           <div className="portal-header-text">
             <h1>BATANGAS STATE UNIVERSITY</h1>
             <p>The National Engineering University</p>
