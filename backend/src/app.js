@@ -7,6 +7,7 @@ const authRoutes = require('./routes/authRoutes');
 const studentRoutes = require('./routes/studentRoutes');
 const facilitatorRoutes = require('./routes/facilitatorRoutes');
 const publicRoutes = require('./routes/publicRoutes');
+const messagesRoutes = require('./routes/messagesRoutes');
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/facilitator', facilitatorRoutes);
 app.use('/api/public', publicRoutes);
+app.use('/api/messages', messagesRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'not_found', message: 'Route not found' });
