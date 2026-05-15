@@ -12,7 +12,7 @@ export function StudentAnalyticsPage() {
 
   return (
     <div className="page-stack">
-      <header className="page-header">
+      <header className="page-card-header">
         <div>
           <p className="eyebrow">Wellness analytics</p>
           <h1>Your mental wellness trajectory</h1>

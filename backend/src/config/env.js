@@ -5,6 +5,10 @@ dotenv.config();
 const env = {
   port: Number(process.env.PORT || 4000),
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+  clientOrigins: (process.env.CLIENT_ORIGINS || process.env.CLIENT_ORIGIN || 'http://localhost:5173')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
   jwtSecret: process.env.JWT_SECRET || 'spartang-development-secret',
   dbHost: process.env.DB_HOST || '127.0.0.1',
   dbPort: Number(process.env.DB_PORT || 3306),

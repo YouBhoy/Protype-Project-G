@@ -45,7 +45,7 @@ export function AssessmentPage() {
 
   return (
     <div className="page-stack">
-      <header className="page-header">
+      <header className="page-card-header">
         <div>
           <p className="eyebrow">Assessment workflow</p>
           <h1>{definition?.label || 'Choose an assessment'}</h1>

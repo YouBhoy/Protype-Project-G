@@ -31,10 +31,24 @@ export default function App() {
         <Route path="ogc/signup" element={<FacilitatorSignupPage />} />
         <Route path="ogc/register" element={<FacilitatorSignupPage />} />
         <Route path="resources" element={<EmergencyResourcesPage />} />
+        <Route path="emergency-resources" element={<EmergencyResourcesPage />} />
       </Route>
 
       <Route path="student/consent" element={<ConsentRoute><ConsentPage /></ConsentRoute>} />
 
+      <Route element={<PrivateRoute role="student"><PortalLayout /></PrivateRoute>}>
+        <Route path="student/dashboard" element={<StudentDashboardPage />} />
+        <Route path="student/analytics" element={<StudentAnalyticsPage />} />
+        <Route path="student/appointments" element={<AppointmentsPage />} />
+        <Route path="student/assessments" element={<AssessmentPage />} />
+        <Route path="student/assessments/:type" element={<AssessmentPage />} />
+        <Route path="student/resources" element={<EmergencyResourcesPage />} />
+      </Route>
+
+      <Route element={<PrivateRoute role="ogc"><PortalLayout /></PrivateRoute>}>
+        <Route path="facilitator/dashboard" element={<FacilitatorDashboardPage />} />
+        <Route path="facilitator/appointments" element={<FacilitatorAppointmentsPage />} />
+        <Route path="facilitator/resources" element={<EmergencyResourcesPage />} />
       <Route path="student" element={<PrivateRoute role="student"><PortalLayout /></PrivateRoute>}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<StudentDashboardPage />} />
