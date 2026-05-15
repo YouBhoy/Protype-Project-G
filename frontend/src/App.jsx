@@ -49,21 +49,6 @@ export default function App() {
         <Route path="facilitator/dashboard" element={<FacilitatorDashboardPage />} />
         <Route path="facilitator/appointments" element={<FacilitatorAppointmentsPage />} />
         <Route path="facilitator/resources" element={<EmergencyResourcesPage />} />
-      <Route path="student" element={<PrivateRoute role="student"><PortalLayout /></PrivateRoute>}>
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<StudentDashboardPage />} />
-        <Route path="analytics" element={<StudentAnalyticsPage />} />
-        <Route path="appointments" element={<AppointmentsPage />} />
-        <Route path="assessments" element={<AssessmentPage />} />
-        <Route path="assessments/:type" element={<AssessmentPage />} />
-        <Route path="chat" element={<ChatPage />} />
-      </Route>
-
-      <Route path="facilitator" element={<PrivateRoute role="ogc"><PortalLayout /></PrivateRoute>}>
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<FacilitatorDashboardPage />} />
-        <Route path="appointments" element={<FacilitatorAppointmentsPage />} />
-        <Route path="chat" element={<ChatPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

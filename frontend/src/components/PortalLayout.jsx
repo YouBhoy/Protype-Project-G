@@ -8,17 +8,17 @@ export function PortalLayout() {
   const resourcesPath = user?.role === 'ogc' ? '/facilitator/resources' : '/student/resources';
 
   const studentLinks = [
-    { to: 'dashboard', label: 'Dashboard' },
-    { to: 'assessments', label: 'Assessments' },
-    { to: 'analytics', label: 'Analytics' },
-    { to: 'appointments', label: 'Appointments' },
-    { to: 'chat', label: 'Chat' }
+    { to: '/student/dashboard', label: 'Dashboard' },
+    { to: '/student/assessments', label: 'Assessments' },
+    { to: '/student/analytics', label: 'Analytics' },
+    { to: '/student/appointments', label: 'Appointments' },
+    { to: '/student/chat', label: 'Chat' }
   ];
 
   const facilitatorLinks = [
-    { to: 'dashboard', label: 'Dashboard' },
-    { to: 'appointments', label: 'Appointments' },
-    { to: 'chat', label: 'Chat' }
+    { to: '/facilitator/dashboard', label: 'Dashboard' },
+    { to: '/facilitator/appointments', label: 'Appointments' },
+    { to: '/facilitator/chat', label: 'Chat' }
   ];
 
   const links = user?.role === 'ogc' ? facilitatorLinks : studentLinks;
