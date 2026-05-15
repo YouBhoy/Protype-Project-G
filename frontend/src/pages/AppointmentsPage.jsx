@@ -35,7 +35,7 @@ export function AppointmentsPage() {
 
   return (
     <div className="page-stack">
-      <header className="page-header">
+      <header className="page-card-header">
         <div>
           <p className="eyebrow">Appointment scheduling</p>
           <h1>Request counseling support</h1>

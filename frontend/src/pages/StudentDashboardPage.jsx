@@ -23,7 +23,7 @@ export function StudentDashboardPage() {
 
   return (
     <div className="page-stack">
-      <header className="page-header">
+      <header className="dashboard-page-header">
         <div>
           <p className="eyebrow">Student dashboard</p>
           <h1>Monitor your wellness and next steps</h1>
