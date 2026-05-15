@@ -31,12 +31,17 @@ export function AssessmentPage() {
   })), [catalog]);
 
   async function handleSubmit(responses) {
+    console.log('Submitting assessment', { type, responses });
     setSubmitting(true);
     setError('');
     try {
       const data = await api.post(`/student/assessments/${type}/submit`, { responses });
+      console.log('Assessment submission response:', data);
       setResult(data.result);
+      // Redirect to dashboard after successful submission
+      navigate('/student/dashboard');
     } catch (err) {
+      console.error('Assessment submission error:', err);
       setError(err.message || 'Unable to submit assessment');
     } finally {
       setSubmitting(false);

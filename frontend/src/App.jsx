@@ -42,12 +42,14 @@ export default function App() {
         <Route path="student/appointments" element={<AppointmentsPage />} />
         <Route path="student/assessments" element={<AssessmentPage />} />
         <Route path="student/assessments/:type" element={<AssessmentPage />} />
+        <Route path="student/chat" element={<ChatPage />} />
         <Route path="student/resources" element={<EmergencyResourcesPage />} />
       </Route>
 
       <Route element={<PrivateRoute role="ogc"><PortalLayout /></PrivateRoute>}>
         <Route path="facilitator/dashboard" element={<FacilitatorDashboardPage />} />
         <Route path="facilitator/appointments" element={<FacilitatorAppointmentsPage />} />
+        <Route path="facilitator/chat" element={<ChatPage />} />
         <Route path="facilitator/resources" element={<EmergencyResourcesPage />} />
       </Route>
 

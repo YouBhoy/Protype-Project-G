@@ -77,9 +77,10 @@ button, input, select { font: inherit; }
 
 .brand-block, .brand-inline { display: flex; align-items: center; gap: 12px; }
 .brand-mark {
-  width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
-  color: white; background: linear-gradient(135deg, var(--primary), var(--primary-strong)); font-weight: 800;
-  box-shadow: var(--shadow);
+  width: 36px; 
+  height: 36px; 
+  object-fit: contain;
+  border-radius: 50%;
 }
 .brand-block small, .muted { color: var(--muted); }
 
@@ -107,7 +108,10 @@ button, input, select { font: inherit; }
   display: flex; align-items: center; gap: 16px;
 }
 .public-navbar-seal {
-  font-size: 2.2rem; display: flex; align-items: center; justify-content: center;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 50%;
 }
 .public-navbar-text h2 {
   margin: 0; font-size: 1.3rem; font-weight: 800; color: white; letter-spacing: 0.02em;
@@ -124,9 +128,10 @@ button, input, select { font: inherit; }
 }
 .portal-header-brand { display: flex; align-items: center; gap: 16px; }
 .portal-header-seal {
-  width: 50px; height: 50px; border-radius: 8px;
-  background: white; display: grid; place-items: center;
-  font-weight: 800; color: var(--primary); font-size: 1.2rem;
+  width: 48px; 
+  height: 48px; 
+  object-fit: contain;
+  border-radius: 50%;
 }
 .portal-header-text h1 { font-size: 1.2rem; margin: 0; color: white; font-weight: 800; }
 .portal-header-text p { font-size: 0.78rem; margin: 2px 0 0 0; color: var(--gold); font-weight: 600; }
@@ -141,7 +146,7 @@ button, input, select { font: inherit; }
   align-items: center;
   flex: 1;
   width: 100%;
-  padding: 40px 24px;
+  min-height: calc(100vh - 70px);
 }
 .hero-page { max-width: 1180px; margin: 0 auto; display: grid; gap: 24px; }
 .hero-panel, .info-hero, .info-card, .stat-card, .chart-card, .data-panel, .result-card {
@@ -271,6 +276,119 @@ form.stack {
 .tone-warning { border-left-color: var(--warning); }
 .tone-danger { border-left-color: var(--danger); }
 
+/* Login Card Redesign */
+.auth-card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+/* Red Header Section in Login Card */
+.auth-card-header {
+  background: var(--primary);
+  color: white;
+  padding: 32px 24px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+.auth-card-seal {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 50%;
+  margin-bottom: 8px;
+}
+.auth-card-title {
+  margin: 0 0 8px 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: 0.02em;
+}
+.auth-card-subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--gold);
+}
+
+/* Tab Navigation */
+.auth-card-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+}
+.auth-tab {
+  flex: 1;
+  padding: 14px 16px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+.auth-tab:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+.auth-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  background: rgba(139, 0, 0, 0.02);
+}
+
+/* Form Content Area */
+.auth-card-tabs + form,
+.auth-card-tabs + .auth-signup-redirect {
+  padding: 24px;
+}
+form.stack {
+  padding: 24px;
+}
+
+/* Login Dropdown */
+.login-dropdown {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: white;
+  font-size: 1rem;
+}
+
+.login-mode-text {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: center;
+  margin: 8px 0 0 0;
+}
+
+/* Signup Redirect Section */
+.auth-signup-redirect {
+  padding: 24px;
+  text-align: center;
+}
+.auth-signup-redirect p {
+  color: var(--muted);
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+}
+.signup-button-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.signup-button-row .btn {
+  width: 100%;
+}
+
 .section-heading, .page-header, .row-between { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .page-stack { display: grid; gap: 20px; }
 .dashboard-page-header {
@@ -333,13 +451,43 @@ form.stack {
 .toggle { background: var(--panel-soft); border: 0; border-radius: 999px; padding: 10px 16px; font-weight: 700; }
 .toggle.active { background: var(--primary); color: white; }
 
-.assessment-form, .question-list, .question-card { display: grid; gap: 16px; }
+.assessment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0 24px;
+}
+
+.question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0 24px;
+}
 .assessment-picker-grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 .assessment-picker-card { display: grid; gap: 18px; align-content: space-between; }
-.question-card {
-  border: 1px solid var(--border); border-radius: 18px; padding: 16px; background: var(--panel-soft);
+.form-progress {
+  background-color: white;
+  border-radius: 12px;
+  padding: 16px 24px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+  font-weight: 600;
 }
-.question-card legend { font-weight: 700; }
+
+.question-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: white;
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  width: 100%;
+}
+.question-title { margin: 0; font-weight: 700; }
 .choice-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .choice-pill { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 999px; background: white; }
 

@@ -50,7 +50,7 @@ export function LoginPage() {
       <section className="auth-card">
         {/* Red Header Section */}
         <div className="auth-card-header">
-          <div className="auth-card-seal">🛡️</div>
+          <img src="https://www.nutritionmasterclass.com.ph/sites/default/files/2023-03/Batangas%20State%20University.jpg" alt="BSU Seal" className="auth-card-seal" />
           <h2 className="auth-card-title">SPARTAN-G Portal</h2>
           <p className="auth-card-subtitle">Student assessment and OGC facilitator prototype portal.</p>
         </div>
