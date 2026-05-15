@@ -1,6 +1,9 @@
+const http = require('http');
+const { Server } = require('socket.io');
 const app = require('./app');
 const env = require('./config/env');
 const { pool } = require('./database/pool');
+const setupChatSocket = require('./sockets/chat.socket');
 
 async function bootstrap() {
   try {
@@ -14,7 +17,19 @@ async function bootstrap() {
     }
   }
 
-  app.listen(env.port, () => {
+  // Create HTTP server and attach Socket.io
+  const httpServer = http.createServer(app);
+  const io = new Server(httpServer, {
+    cors: {
+      origin: env.clientOrigin,
+      credentials: true
+    }
+  });
+
+  // Setup Socket.io event handlers
+  setupChatSocket(io);
+
+  httpServer.listen(env.port, () => {
     console.log(`SPARTAN-G API listening on port ${env.port}`);
   });
 }

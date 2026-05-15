@@ -7,15 +7,17 @@ export function PortalLayout() {
   const navigate = useNavigate();
 
   const studentLinks = [
-    { to: '/student/dashboard', label: 'Dashboard' },
-    { to: '/student/assessments', label: 'Assessments' },
-    { to: '/student/analytics', label: 'Analytics' },
-    { to: '/student/appointments', label: 'Appointments' }
+    { to: 'dashboard', label: 'Dashboard' },
+    { to: 'assessments', label: 'Assessments' },
+    { to: 'analytics', label: 'Analytics' },
+    { to: 'appointments', label: 'Appointments' },
+    { to: 'chat', label: 'Chat' }
   ];
 
   const facilitatorLinks = [
-    { to: '/facilitator/dashboard', label: 'Dashboard' },
-    { to: '/facilitator/appointments', label: 'Appointments' }
+    { to: 'dashboard', label: 'Dashboard' },
+    { to: 'appointments', label: 'Appointments' },
+    { to: 'chat', label: 'Chat' }
   ];
 
   const links = user?.role === 'ogc' ? facilitatorLinks : studentLinks;
