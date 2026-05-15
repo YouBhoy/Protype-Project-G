@@ -14,12 +14,25 @@ router.get(
   asyncHandler(async (req, res) => {
     const { roomId } = req.params;
     const { limit = 50, offset = 0 } = req.query;
+    const userId = req.user.id;
 
     const messages = await messageModel.getMessageHistory(
       roomId,
       parseInt(limit, 10),
       parseInt(offset, 10)
     );
+
+    console.log('[MESSAGES API] History endpoint called:', {
+      userId,
+      roomId,
+      count: messages.length,
+      firstMessage: messages.length > 0 ? {
+        id: messages[0].id,
+        senderId: messages[0].senderId,
+        receiverId: messages[0].receiverId,
+        message: messages[0].message?.substring(0, 30)
+      } : null
+    });
 
     res.json({
       success: true,
@@ -110,15 +123,8 @@ router.get(
 router.get(
   '/conversations',
   authenticate,
+  requireRole('ogc'),
   asyncHandler(async (req, res) => {
-    if (req.user.role !== 'ogc') {
-      return res.status(403).json({
-        success: false,
-        error: 'only_facilitators_allowed',
-        message: 'Only OGC facilitators can view conversations'
-      });
-    }
-
     const facilitatorId = req.user.id;
     const { limit = 20, offset = 0 } = req.query;
 

@@ -1,5 +1,63 @@
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').trim();
 
+function decodeTokenPayload(token) {
+  try {
+    return token ? JSON.parse(atob(token.split('.')[1])) : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function getStoredTokenForRole(preferredRole) {
+  const studentToken = localStorage.getItem('spartang_student_token') || localStorage.getItem('spartang_token') || '';
+  const facilitatorToken = localStorage.getItem('spartang_facilitator_token') || localStorage.getItem('spartang_token') || '';
+
+  const studentPayload = decodeTokenPayload(studentToken);
+  const facilitatorPayload = decodeTokenPayload(facilitatorToken);
+
+  if (preferredRole === 'student') {
+    if (studentPayload?.role === 'student') {
+      return studentToken;
+    }
+
+    if (facilitatorPayload?.role === 'student') {
+      return facilitatorToken;
+    }
+  }
+
+  if (preferredRole === 'ogc') {
+    if (facilitatorPayload?.role === 'ogc') {
+      return facilitatorToken;
+    }
+
+    if (studentPayload?.role === 'ogc') {
+      return studentToken;
+    }
+  }
+
+  if (studentPayload?.role === 'student') {
+    return studentToken;
+  }
+
+  if (facilitatorPayload?.role === 'ogc') {
+    return facilitatorToken;
+  }
+
+  return studentToken || facilitatorToken || '';
+}
+
+function getPreferredRoleForRequest(path) {
+  if (path.startsWith('/messages/conversations') || path.startsWith('/facilitator')) {
+    return 'ogc';
+  }
+
+  if (path.startsWith('/messages/assigned-facilitator') || path.startsWith('/student')) {
+    return 'student';
+  }
+
+  return '';
+}
+
 function buildUrl(path) {
   if (/^https?:\/\//i.test(API_BASE_URL)) {
     return `${API_BASE_URL}${path}`;
@@ -25,7 +83,7 @@ function formatErrorDetails(details) {
 }
 
 async function request(path, options = {}) {
-  const token = localStorage.getItem('spartang_token');
+  const token = getStoredTokenForRole(getPreferredRoleForRequest(path));
   let response;
   try {
     response = await fetch(buildUrl(path), {

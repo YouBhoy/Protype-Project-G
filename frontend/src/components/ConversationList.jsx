@@ -8,24 +8,40 @@ export function ConversationList({ onSelectConversation, selectedStudentId }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    let active = true;
+
+    const token = localStorage.getItem('spartang_facilitator_token')
+      || localStorage.getItem('spartang_student_token');
+
+    if (!token) {
+      setError('No authentication token found');
+      setIsLoading(false);
+      return;
+    }
+
     const fetchConversations = async () => {
       try {
         setIsLoading(true);
+        setError('');
+
         const response = await api.get('/messages/conversations?limit=20');
-        setConversations(response.data || []);
+        const data = response?.data?.data || response?.data || response || [];
+        const items = Array.isArray(data) ? data : [];
+        if (!active) return;
+        setConversations(items);
       } catch (err) {
-        setError('Failed to load conversations');
-        console.error(err);
+        const message = err?.response?.data?.message || err.message || String(err);
+        if (!active) return;
+        setError('Failed to load conversations: ' + message);
+        console.error('ConversationList fetch error:', err);
       } finally {
-        setIsLoading(false);
+        if (active) setIsLoading(false);
       }
     };
 
-    // Poll for new conversations every 5 seconds
     fetchConversations();
-    const interval = setInterval(fetchConversations, 5000);
 
-    return () => clearInterval(interval);
+    return () => { active = false; };
   }, []);
 
   if (isLoading) {

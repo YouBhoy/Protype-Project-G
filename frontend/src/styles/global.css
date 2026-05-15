@@ -526,6 +526,22 @@ th { color: var(--muted); font-size: 0.82rem; text-transform: uppercase; letter-
 .tab-row { display: flex; gap: 12px; padding-top: 20px; border-top: 1px solid var(--border); }
 .tab { padding: 10px 16px; cursor: pointer; border: 2px solid var(--primary); color: var(--primary); background: white; border-radius: 8px; font-weight: 600; font-size: 0.9rem; }
 .tab.active { background: var(--primary); color: white; }
+.analytics-nav-row { display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+
+.urgency-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.urgency-immediate { background: rgba(185, 28, 28, 0.16); color: #991b1b; }
+.urgency-high { background: rgba(217, 119, 6, 0.16); color: #92400e; }
+.urgency-medium { background: rgba(29, 78, 216, 0.16); color: #1e3a8a; }
+.urgency-low { background: rgba(15, 118, 110, 0.16); color: #115e59; }
 
 @media (max-width: 1024px) {
   .sidebar { position: static; width: auto; height: auto; overflow-y: visible; border-right: 0; border-bottom: 3px solid var(--primary); border-bottom: 3px solid var(--primary); }

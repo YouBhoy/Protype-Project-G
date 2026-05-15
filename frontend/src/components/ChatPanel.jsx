@@ -24,16 +24,64 @@ export function ChatPanel({
 
   const { user: authUser } = useAuth();
 
-  // Use authenticated user as the authoritative current user; fall back to props for tests
-  const resolvedCurrentUserId = Number(authUser?.id ?? currentUserId ?? studentId);
-  const resolvedCurrentUserRole = authUser?.role ?? currentUserRole ?? null;
+  // CRITICAL FIX: Use authUser first (guaranteed to be logged-in user)
+  // Then use prop, only fall back to studentId if truly needed
+  const resolvedCurrentUserId = authUser?.id ?? currentUserId;
+  const resolvedCurrentUserRole = authUser?.role ?? currentUserRole;
 
-  const activeUserId = resolvedCurrentUserId;
-  const otherParticipantId = activeUserId === Number(studentId) ? Number(facilitatorId) : Number(studentId);
+  // Force to numbers for reliable comparison
+  const activeUserId = Number(resolvedCurrentUserId);
+  const numStudentId = Number(studentId);
+  const numFacilitatorId = Number(facilitatorId);
+  const otherParticipantId = activeUserId === numStudentId ? numFacilitatorId : numStudentId;
+
+  // Validate: activeUserId must be one of the two participants
+  const isValidParticipant = activeUserId === numStudentId || activeUserId === numFacilitatorId;
+  console.warn('[ChatPanel] VALIDATION:', {
+    activeUserId,
+    numStudentId,
+    numFacilitatorId,
+    isValidParticipant,
+    authUserId: authUser?.id,
+    currentUserIdProp: currentUserId
+  });
+
+  if (!isValidParticipant) {
+    console.error('[ChatPanel] ERROR: activeUserId is not a valid participant!', {
+      activeUserId,
+      numStudentId,
+      numFacilitatorId
+    });
+  }
+
+  // DEBUG: Log user identification
+  console.log('[ChatPanel] USER IDENTIFICATION:', {
+    currentUserIdProp: currentUserId,
+    authUserId: authUser?.id,
+    authRole: authUser?.role,
+    studentIdProp: studentId,
+    facilitatorIdProp: facilitatorId,
+    resolvedCurrentUserId,
+    resolvedCurrentUserRole,
+    activeUserId,
+    numStudentId,
+    numFacilitatorId,
+    otherParticipantId,
+    isStudent: activeUserId === numStudentId,
+    isFacilitator: activeUserId === numFacilitatorId
+  });
 
   const isSentMessage = (message) => {
-    const senderId = Number(message.senderId ?? message.sender_id);
-    return senderId === activeUserId;
+    // Extract senderId, convert to number for comparison
+    const rawSenderId = message.senderId ?? message.sender_id;
+    const msgSenderId = Number(rawSenderId);
+    
+    // Compare as numbers (most reliable)
+    const isSent = msgSenderId === activeUserId;
+    
+    console.log(`[isSentMessage] msgSenderId=${msgSenderId}, activeUserId=${activeUserId}, isSent=${isSent} (msg: ${message.message?.substring(0, 20)})`);
+    
+    return isSent;
   };
 
   const normalizeMessage = (message) => {
@@ -41,10 +89,12 @@ export function ChatPanel({
     const receiverId = Number(message.receiverId ?? message.receiver_id);
     const rawCreated = message.createdAt ?? message.created_at;
     const createdAt = rawCreated ? new Date(rawCreated).toISOString() : null;
+    
     return {
       ...message,
-      senderId,
-      receiverId,
+      senderId,  // Ensure numeric
+      receiverId,  // Ensure numeric
+      senderRole: message.senderRole ?? message.sender_role ?? null,
       createdAt,
       isRead: Boolean(message.isRead ?? message.is_read)
     };
@@ -108,7 +158,27 @@ export function ChatPanel({
       try {
         setIsLoading(true);
         const response = await api.get(`/messages/history/${roomId}?limit=50`);
-        setMessages((response.data || []).map(normalizeMessage));
+        const history = response.data || [];
+        const normalizedHistory = Array.isArray(history) ? history.map(normalizeMessage) : [];
+
+        // DEBUG: Log all loaded messages
+        console.log('[ChatPanel] LOADED MESSAGE HISTORY:', {
+          roomId,
+          count: normalizedHistory.length,
+          messages: normalizedHistory.map(m => ({
+            id: m.id,
+            senderId: m.senderId,
+            receiverId: m.receiverId,
+            message: m.message.substring(0, 20),
+            isSent: m.senderId === activeUserId
+          }))
+        });
+
+        if (normalizedHistory.length > 0) {
+          console.log('ChatPanel first message object:', normalizedHistory[0]);
+        }
+
+        setMessages(normalizedHistory);
       } catch (error) {
         console.error('Failed to load message history:', error);
       } finally {
@@ -206,6 +276,21 @@ export function ChatPanel({
 
   if (!isOpen) return null;
 
+  // Safety check: if activeUserId is not valid, show error
+  if (!isValidParticipant) {
+    return (
+      <div className="chat-panel-overlay">
+        <div className="chat-panel">
+          <div className="chat-panel-content" style={{color: 'red', padding: '16px'}}>
+            <p><strong>Error:</strong> Invalid participant ID</p>
+            <p>activeUserId={activeUserId}, student={numStudentId}, facilitator={numFacilitatorId}</p>
+            <p>Please refresh the page.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="chat-panel-overlay">
       <div className="chat-panel">
@@ -233,29 +318,26 @@ export function ChatPanel({
           ) : messages.length === 0 ? (
             <div className="chat-empty">Start a conversation</div>
           ) : (
-            messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`chat-message ${
-                  isSentMessage(msg) ? 'sent' : 'received'
-                }`}
-              >
-                <div className="message-content">
-                  <p>{msg.message}</p>
-                   <span className="message-time">{formatTime(msg.createdAt)}</span>
-                   {showDebug && (
-                     <span style={{ marginLeft: '8px', fontSize: '11px', color: '#666' }}>
-                       ({msg.senderId}→{msg.receiverId})
-                     </span>
-                   )}
-                  {isSentMessage(msg) && (
-                    <span className="message-status">
-                      {msg.isRead ? '✓✓' : '✓'}
-                    </span>
-                  )}
+            messages.map((msg) => {
+              const isSent = isSentMessage(msg);
+              console.log(`[ChatPanel RENDER] Message id=${msg.id}: senderId=${msg.senderId}, isSent=${isSent}`);
+              return (
+                <div
+                  key={msg.id}
+                  className={`message ${isSent ? 'sent' : 'received'}`}
+                >
+                  <div className="message-content">
+                    <p>{msg.message}</p>
+                    <span className="message-time">{formatTime(msg.createdAt)}</span>
+                    {showDebug && (
+                      <span style={{ marginLeft: '8px', fontSize: '11px', color: '#666' }}>
+                        ({msg.senderId}→{msg.receiverId})
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
           {remoteIsTyping && (
             <div className="chat-message received">
