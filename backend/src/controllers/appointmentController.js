@@ -1,4 +1,5 @@
 const asyncHandler = require('../utils/asyncHandler');
+const { emitAppointmentUpdate } = require('../sockets/chat.socket');
 const {
   getStudentAvailableSlots,
   requestAppointment,
@@ -25,11 +26,13 @@ const studentAppointments = asyncHandler(async (req, res) => {
 
 const request = asyncHandler(async (req, res) => {
   const result = await requestAppointment(req.user.id, req.body.slotId, req.body.purpose);
+  emitAppointmentUpdate({ type: 'appointment_created', studentId: req.user.id });
   res.status(201).json(result);
 });
 
 const cancel = asyncHandler(async (req, res) => {
   const result = await cancelAppointment(req.user.id, req.params.id);
+  emitAppointmentUpdate({ type: 'appointment_cancelled', studentId: req.user.id, appointmentId: req.params.id });
   res.json(result);
 });
 
@@ -40,6 +43,7 @@ const facilitatorAvailability = asyncHandler(async (req, res) => {
 
 const createSlot = asyncHandler(async (req, res) => {
   const result = await createAvailabilitySlot(req.user.id, req.body.slotDate, req.body.startTime, req.body.endTime);
+  emitAppointmentUpdate({ type: 'availability_created', facilitatorId: req.user.id });
   res.status(201).json(result);
 });
 
@@ -50,6 +54,12 @@ const facilitatorAppointments = asyncHandler(async (req, res) => {
 
 const updateStatus = asyncHandler(async (req, res) => {
   const result = await updateAppointmentStatus(req.user.id, req.params.id, req.body.status, req.body.notes);
+  emitAppointmentUpdate({
+    type: 'appointment_status_updated',
+    facilitatorId: req.user.id,
+    appointmentId: req.params.id,
+    status: result.status
+  });
   res.json(result);
 });
 

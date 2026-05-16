@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
+import { initializeSocket } from '../socket';
 
 function getAppointmentTone(status) {
   const normalized = String(status || '').toLowerCase();
@@ -36,6 +37,27 @@ export function AppointmentsPage() {
     }, 15000);
 
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('spartang_student_token')
+      || localStorage.getItem('spartang_token')
+      || '';
+
+    if (!token) {
+      return undefined;
+    }
+
+    const socket = initializeSocket(token);
+    const handleAppointmentUpdate = () => {
+      loadData().catch(() => null);
+    };
+
+    socket.on('appointment_updated', handleAppointmentUpdate);
+
+    return () => {
+      socket.off('appointment_updated', handleAppointmentUpdate);
+    };
   }, []);
 
   async function handleRequest() {

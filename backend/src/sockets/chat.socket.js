@@ -4,8 +4,11 @@ const messageModel = require('../models/message.model');
 
 // Store active users: { userId: socketId }
 const activeUsers = {};
+let ioRef = null;
 
 function setupChatSocket(io) {
+  ioRef = io;
+
   // Middleware for Socket.io authentication
   io.use(async (socket, next) => {
     try {
@@ -113,4 +116,11 @@ function setupChatSocket(io) {
   });
 }
 
+function emitAppointmentUpdate(payload) {
+  if (ioRef) {
+    ioRef.emit('appointment_updated', payload);
+  }
+}
+
 module.exports = setupChatSocket;
+module.exports.emitAppointmentUpdate = emitAppointmentUpdate;
