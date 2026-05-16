@@ -105,16 +105,16 @@ async function getFacilitatorAvailability(facilitatorId) {
   );
 }
 
-async function getFacilitatorAppointments(facilitatorId, assignedCollege) {
+async function getFacilitatorAppointments(facilitatorId) {
   return query(
     `SELECT a.id, a.purpose, a.scheduled_at AS scheduledAt, a.status,
             s.student_id AS studentId, s.name AS studentName, s.email AS studentEmail,
             s.college, s.consent_flag AS consentFlag
      FROM appointments a
      JOIN students s ON s.id = a.student_id
-     WHERE a.facilitator_id = ? AND s.college = ?
+     WHERE a.facilitator_id = ?
      ORDER BY a.scheduled_at DESC`,
-    [facilitatorId, assignedCollege]
+    [facilitatorId]
   ).then((rows) => rows.map((row) => ({
     ...row,
     studentId: pseudonymizeStudentId(row.studentId),

@@ -44,7 +44,7 @@ const createSlot = asyncHandler(async (req, res) => {
 });
 
 const facilitatorAppointments = asyncHandler(async (req, res) => {
-  const items = await getFacilitatorAppointments(req.user.id, req.user.assignedCollege);
+  const items = await getFacilitatorAppointments(req.user.id);
   res.json({ items });
 });
 
