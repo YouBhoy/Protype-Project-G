@@ -28,10 +28,12 @@ export function PortalLayout() {
     navigate('/login');
   }
 
+  const homePath = user?.role === 'ogc' ? '/facilitator/dashboard' : '/student/dashboard';
+
   return (
     <div className="shell">
       <aside className="sidebar">
-        <Link to="/" className="brand-block">
+        <Link to={homePath} className="brand-block">
           <img src="https://www.nutritionmasterclass.com.ph/sites/default/files/2023-03/Batangas%20State%20University.jpg" alt="BSU Seal" className="brand-mark" />
           <span>
             <strong>SPARTAN-G</strong>

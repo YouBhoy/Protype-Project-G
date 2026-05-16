@@ -50,39 +50,8 @@ function setupChatSocket(io) {
     // Send message event
     socket.on('send_message', async (data) => {
       try {
-        const { roomId, message } = data;
-        const senderId = Number(socket.userId);
-        let receiverId = null;
-
-        console.log('[BACKEND SOCKET] send_message received:', {
-          senderId,
-          roomId,
-          messageLength: message?.length,
-          socketUserId: socket.userId,
-          socketUserRole: socket.userRole
-        });
-
-        // Always derive receiverId from roomId to ensure it's the OTHER participant
-        if (typeof roomId === 'string') {
-          const parts = roomId.split('_');
-          if (parts.length === 3) {
-            const a = Number(parts[1]);
-            const b = Number(parts[2]);
-            // receiverId is the participant who is NOT the sender
-            receiverId = a === senderId ? b : a;
-            console.log('[BACKEND SOCKET] Derived receiverId from roomId:', {
-              roomId,
-              senderId,
-              participantA: a,
-              participantB: b,
-              derivedReceiverId: receiverId
-            });
-          }
-        }
-
-        if (!receiverId) {
-          throw new Error('Could not determine receiver from room ID');
-        }
+        const { roomId, receiverId, message } = data;
+        const senderId = socket.userId;
 
         // Save message to database
         const savedMessage = await messageModel.saveMessage({
@@ -90,16 +59,6 @@ function setupChatSocket(io) {
           receiver_id: receiverId,
           room_id: roomId,
           message
-        });
-
-        // Log what was saved for debugging
-        console.log('[BACKEND SOCKET] Message saved:', {
-          id: savedMessage.insertId,
-          sender_id: senderId,
-          receiver_id: receiverId,
-          room_id: roomId,
-          message: message.substring(0, 30),
-          timestamp: new Date().toISOString()
         });
 
         // Emit message to room

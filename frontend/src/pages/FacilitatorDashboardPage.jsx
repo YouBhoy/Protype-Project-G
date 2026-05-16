@@ -31,6 +31,13 @@ export function FacilitatorDashboardPage() {
     }
   };
 
+  const handleModeChange = (mode) => {
+    // switch view immediately
+    setActiveMode(mode);
+    // refresh dashboard data in background so models show latest values
+    loadDashboard().catch(() => null);
+  };
+
   useEffect(() => {
     loadDashboard().catch(() => null);
 
@@ -358,23 +365,33 @@ export function FacilitatorDashboardPage() {
         </div>
         <div className="tab-row">
           <Link to="/facilitator/dashboard" className="tab active">Analytics</Link>
-          <Link to="/facilitator/appointments" className="tab">Slots</Link>
-          <Link to="/facilitator/appointments" className="tab">Appointments</Link>
-          <Link to="/facilitator/resources" className="tab">Emergency Contacts</Link>
         </div>
         <div className="analytics-nav-row">
-          <button className={`tab ${activeMode === 'descriptive' ? 'active' : ''}`} onClick={() => setActiveMode('descriptive')}>Descriptive analytics</button>
-          <button className={`tab ${activeMode === 'predictive' ? 'active' : ''}`} onClick={() => setActiveMode('predictive')}>Predictive analytics</button>
-          <button className={`tab ${activeMode === 'prescriptive' ? 'active' : ''}`} onClick={() => setActiveMode('prescriptive')}>Prescriptive analytics</button>
+          <button
+            className={`tab ${activeMode === 'descriptive' ? 'active' : ''}`}
+            onClick={() => handleModeChange('descriptive')}
+            aria-pressed={activeMode === 'descriptive'}
+          >
+            Descriptive analytics
+          </button>
+          <button
+            className={`tab ${activeMode === 'predictive' ? 'active' : ''}`}
+            onClick={() => handleModeChange('predictive')}
+            aria-pressed={activeMode === 'predictive'}
+          >
+            Predictive analytics
+          </button>
+          <button
+            className={`tab ${activeMode === 'prescriptive' ? 'active' : ''}`}
+            onClick={() => handleModeChange('prescriptive')}
+            aria-pressed={activeMode === 'prescriptive'}
+          >
+            Prescriptive analytics
+          </button>
         </div>
       </div>
 
-      <section className="metrics-grid">
-        <StatCard label="Monitored students" value={data?.totals?.totalStudents || 0} tone="primary" />
-        <StatCard label="High risk" value={data?.totals?.highRiskCount || 0} detail="Students requiring rapid follow-up" tone="warning" />
-        <StatCard label="Critical alerts" value={data?.totals?.criticalCount || 0} detail="Immediate outreach recommended" tone="danger" />
-        <StatCard label="Open concerns" value={data?.criticalAlerts?.length || 0} detail="Latest high-priority assessments" />
-      </section>
+      {/* Metrics are shown per-analytics view (descriptive/predictive/prescriptive) */}
 
       {activeMode === 'descriptive' ? renderDescriptive() : null}
       {activeMode === 'predictive' ? renderPredictive() : null}
