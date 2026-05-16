@@ -6,6 +6,14 @@ function formatStatus(status) {
   return String(status || 'pending').toLowerCase();
 }
 
+function sortAppointmentsByRecentChange(appointmentsList) {
+  return [...appointmentsList].sort((left, right) => {
+    const leftTime = new Date(left.updatedAt || left.scheduledAt || 0).getTime();
+    const rightTime = new Date(right.updatedAt || right.scheduledAt || 0).getTime();
+    return rightTime - leftTime;
+  });
+}
+
 export function FacilitatorAppointmentsPage() {
   const [appointments, setAppointments] = useState([]);
   const [availability, setAvailability] = useState([]);
@@ -16,7 +24,7 @@ export function FacilitatorAppointmentsPage() {
       api.get('/facilitator/appointments'),
       api.get('/facilitator/availability')
     ]);
-    setAppointments(appointmentsData.items || []);
+    setAppointments(sortAppointmentsByRecentChange(appointmentsData.items || []));
     setAvailability(availabilityData.items || []);
   }
 

@@ -68,7 +68,7 @@ async function cancelAppointment(studentId, appointmentId) {
 
 async function getStudentAppointments(studentId) {
   return query(
-    `SELECT a.id, a.purpose, a.scheduled_at AS scheduledAt, a.status, f.name AS facilitatorName,
+    `SELECT a.id, a.purpose, a.scheduled_at AS scheduledAt, a.status, a.updated_at AS updatedAt, f.name AS facilitatorName,
             f.assigned_college AS assignedCollege
      FROM appointments a
      JOIN facilitators f ON f.id = a.facilitator_id
@@ -107,7 +107,7 @@ async function getFacilitatorAvailability(facilitatorId) {
 
 async function getFacilitatorAppointments(facilitatorId) {
   return query(
-    `SELECT a.id, a.purpose, a.scheduled_at AS scheduledAt, a.status,
+    `SELECT a.id, a.purpose, a.scheduled_at AS scheduledAt, a.status, a.updated_at AS updatedAt,
             s.student_id AS studentId, s.name AS studentName, s.email AS studentEmail,
             s.college, s.consent_flag AS consentFlag
      FROM appointments a

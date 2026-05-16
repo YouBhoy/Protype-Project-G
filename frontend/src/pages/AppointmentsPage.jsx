@@ -11,6 +11,14 @@ function getAppointmentTone(status) {
   return 'primary';
 }
 
+function sortAppointmentsByRecentChange(appointmentsList) {
+  return [...appointmentsList].sort((left, right) => {
+    const leftTime = new Date(left.updatedAt || left.scheduledAt || 0).getTime();
+    const rightTime = new Date(right.updatedAt || right.scheduledAt || 0).getTime();
+    return rightTime - leftTime;
+  });
+}
+
 export function AppointmentsPage() {
   const [slots, setSlots] = useState([]);
   const [appointments, setAppointments] = useState([]);
@@ -24,7 +32,7 @@ export function AppointmentsPage() {
       api.get('/student/appointments')
     ]);
     setSlots(slotData.items || []);
-    setAppointments(appointmentData.items || []);
+    setAppointments(sortAppointmentsByRecentChange(appointmentData.items || []));
   }
 
   useEffect(() => {
