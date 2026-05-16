@@ -1,17 +1,64 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { api } from '../services/api';
 import { ChatPanel } from '../components/ChatPanel';
 import { ConversationList } from '../components/ConversationList';
-import { useAuth } from '../contexts/AuthContext';
 import { initializeSocket } from '../socket';
 
 export function ChatPage() {
-  const { user, token } = useAuth();
+  const [user, setUser] = useState(null);
   const [facilitatorInfo, setFacilitatorInfo] = useState(null);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [isChatOpen, setIsChatOpen] = useState(true);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const pathname = window.location.pathname || '';
+  const isFacilitatorPortal = pathname.startsWith('/facilitator');
+
+  const studentToken = localStorage.getItem('spartang_student_token')
+    || localStorage.getItem('spartang_token')
+    || '';
+
+  const facilitatorToken = localStorage.getItem('spartang_facilitator_token')
+    || localStorage.getItem('spartang_token')
+    || '';
+
+  const token = isFacilitatorPortal ? facilitatorToken : studentToken;
+
+  const role = useMemo(() => {
+    try {
+      const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
+      return payload?.role || '';
+    } catch (err) {
+      return '';
+    }
+  }, [token]);
+
+  const userName = useMemo(() => {
+    try {
+      const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
+      return payload?.name || '';
+    } catch (err) {
+      return '';
+    }
+  }, [token]);
+
+  useEffect(() => {
+    let active = true;
+
+    try {
+      const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
+      if (active) {
+        setUser(payload || null);
+      }
+    } catch (err) {
+      if (active) {
+        setUser(null);
+      }
+    }
+
+    return () => {
+      active = false;
+    };
+  }, [token]);
 
   const selectedConversationName = selectedConversation?.student_name
     || [selectedConversation?.first_name, selectedConversation?.last_name].filter(Boolean).join(' ')
@@ -20,10 +67,11 @@ export function ChatPage() {
   useEffect(() => {
     let active = true;
 
-    setLoading(true);
+    if (token) {
+      initializeSocket(token);
+    }
 
-    // For students: get assigned facilitator
-    if (user?.role === 'student') {
+    if (!isFacilitatorPortal) {
       api.get('/messages/assigned-facilitator').then((response) => {
         if (active) {
           setFacilitatorInfo(response.facilitator || null);
@@ -34,37 +82,13 @@ export function ChatPage() {
           setError(err.message || 'Failed to load facilitator information');
           setFacilitatorInfo(null);
         }
-      }).finally(() => {
-        if (active) setLoading(false);
       });
-    } 
-    // For facilitators: load conversation list
-    else if (user?.role === 'ogc') {
-      // Load conversations - this would need a new endpoint or use ConversationList's internal logic
-      if (active) setLoading(false);
-    }
-
-    // Initialize Socket.io connection
-    if (token) {
-      initializeSocket(token);
     }
 
     return () => {
       active = false;
     };
-  }, [token, user?.role]);
-
-  if (loading) {
-    return (
-      <div className="page-stack">
-        <header className="page-header">
-          <p className="eyebrow">Chat</p>
-          <h1>Messaging</h1>
-        </header>
-        <p className="muted">Loading...</p>
-      </div>
-    );
-  }
+  }, [token, isFacilitatorPortal]);
 
   if (error) {
     return (
@@ -88,7 +112,7 @@ export function ChatPage() {
       </header>
 
       <div style={{ display: 'flex', gap: '20px', height: '600px' }}>
-        {user?.role === 'ogc' ? (
+        {isFacilitatorPortal ? (
           <>
             <div style={{ flex: '0 0 300px', borderRight: '1px solid #e0e0e0', overflowY: 'auto' }}>
               <ConversationList onSelectConversation={setSelectedConversation} />
@@ -97,11 +121,11 @@ export function ChatPage() {
               {selectedConversation ? (
                 <ChatPanel
                   studentId={selectedConversation.student_id}
-                  facilitatorId={user.id}
-                  currentUserId={user.id}
-                  currentUserRole={user.role}
+                  facilitatorId={user?.id}
+                  currentUserId={user?.id}
+                  currentUserRole={role}
                   studentName={selectedConversationName}
-                  facilitatorName={user.name}
+                  facilitatorName={userName}
                   isOpen={true}
                   onClose={() => setSelectedConversation(null)}
                 />
@@ -124,11 +148,11 @@ export function ChatPage() {
                 </section>
 
                 <ChatPanel
-                  studentId={user.id}
+                  studentId={user?.id}
                   facilitatorId={facilitatorInfo.id}
-                  currentUserId={user.id}
-                  currentUserRole={user.role}
-                  studentName={user.name}
+                  currentUserId={user?.id}
+                  currentUserRole={role}
+                  studentName={userName}
                   facilitatorName={facilitatorInfo.name}
                   isOpen={isChatOpen}
                   onClose={() => setIsChatOpen(false)}

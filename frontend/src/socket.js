@@ -11,7 +11,6 @@ export function initializeSocket(token) {
 
   socket = io(API_URL, {
     autoConnect: false,
-    withCredentials: true,
     auth: {
       token
     },

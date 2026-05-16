@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS messages (
   is_read BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_room_id (room_id),
   INDEX idx_receiver_id (receiver_id),
   INDEX idx_sender_id (sender_id),

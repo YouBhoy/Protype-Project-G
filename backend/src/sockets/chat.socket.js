@@ -4,8 +4,11 @@ const messageModel = require('../models/message.model');
 
 // Store active users: { userId: socketId }
 const activeUsers = {};
+let ioRef = null;
 
 function setupChatSocket(io) {
+  ioRef = io;
+
   // Middleware for Socket.io authentication
   io.use(async (socket, next) => {
     try {
@@ -50,34 +53,14 @@ function setupChatSocket(io) {
     // Send message event
     socket.on('send_message', async (data) => {
       try {
-        let { roomId, receiverId, message } = data;
-        const senderId = Number(socket.userId);
-        receiverId = Number(receiverId);
-
-        // If client mistakenly sent receiver equal to sender, try to infer the other participant from the roomId
-        if (receiverId === senderId && typeof roomId === 'string') {
-          const parts = roomId.split('_');
-          if (parts.length === 3) {
-            const a = Number(parts[1]);
-            const b = Number(parts[2]);
-            receiverId = a === senderId ? b : a;
-          }
-        }
+        const { roomId, receiverId, message } = data;
+        const senderId = socket.userId;
 
         // Save message to database
         const savedMessage = await messageModel.saveMessage({
           sender_id: senderId,
           receiver_id: receiverId,
           room_id: roomId,
-          message
-        });
-
-        // Log what was saved for debugging
-        console.log('Saved message', {
-          id: savedMessage.insertId,
-          senderId,
-          receiverId,
-          roomId,
           message
         });
 
@@ -133,4 +116,11 @@ function setupChatSocket(io) {
   });
 }
 
+function emitAppointmentUpdate(payload) {
+  if (ioRef) {
+    ioRef.emit('appointment_updated', payload);
+  }
+}
+
 module.exports = setupChatSocket;
+module.exports.emitAppointmentUpdate = emitAppointmentUpdate;

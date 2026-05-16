@@ -1,7 +1,5 @@
 const express = require('express');
 const { authenticate } = require('../middleware/auth');
-const { requireRole } = require('../middleware/auth');
-const { query } = require('../database/pool');
 const messageModel = require('../models/message.model');
 const asyncHandler = require('../utils/asyncHandler');
 
@@ -25,51 +23,6 @@ router.get(
       success: true,
       data: messages,
       count: messages.length
-    });
-  })
-);
-
-// Get the facilitator assigned to the current student
-router.get(
-  '/assigned-facilitator',
-  authenticate,
-  requireRole('student'),
-  asyncHandler(async (req, res) => {
-    const studentRows = await query('SELECT college FROM students WHERE id = ?', [req.user.id]);
-    const studentCollege = studentRows[0]?.college || req.user.college || '';
-
-    let rows = [];
-
-    if (studentCollege) {
-      rows = await query(
-        `SELECT f.id, f.name, f.email, f.assigned_college AS assignedCollege
-         FROM facilitators f
-         WHERE f.assigned_college = ?
-         ORDER BY f.id ASC
-         LIMIT 1`,
-        [studentCollege]
-      );
-    }
-
-    if (!rows.length) {
-      rows = await query(
-        `SELECT id, name, email, assigned_college AS assignedCollege
-         FROM facilitators
-         ORDER BY id ASC
-         LIMIT 1`
-      );
-    }
-
-    if (!rows.length) {
-      return res.status(404).json({
-        success: false,
-        message: 'Assigned facilitator not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      facilitator: rows[0]
     });
   })
 );

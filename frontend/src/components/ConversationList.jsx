@@ -40,15 +40,6 @@ export function ConversationList({ onSelectConversation, selectedStudentId }) {
     return <div className="conversation-list-empty">No conversations yet</div>;
   }
 
-  const getConversationName = (conversation) => {
-    if (conversation.student_name) {
-      return conversation.student_name;
-    }
-
-    const parts = [conversation.first_name, conversation.last_name].filter(Boolean);
-    return parts.length ? parts.join(' ') : 'Student';
-  };
-
   return (
     <div className="conversation-list">
       <div className="conversation-list-header">
@@ -62,12 +53,11 @@ export function ConversationList({ onSelectConversation, selectedStudentId }) {
             className={`conversation-item ${
               selectedStudentId === conversation.student_id ? 'active' : ''
             }`}
-            type="button"
             onClick={() => onSelectConversation(conversation)}
           >
             <div className="conversation-info">
               <div className="conversation-name">
-                {getConversationName(conversation)}
+                {conversation.first_name} {conversation.last_name}
               </div>
               <div className="conversation-preview">
                 {conversation.last_message?.substring(0, 50)}
