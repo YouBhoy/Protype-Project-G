@@ -97,12 +97,59 @@ async function createAvailabilitySlot(facilitatorId, slotDate, startTime, endTim
 
 async function getFacilitatorAvailability(facilitatorId) {
   return query(
-    `SELECT id, slot_date AS slotDate, start_time AS startTime, end_time AS endTime, status
+    `SELECT id, slot_date AS slotDate, start_time AS startTime, end_time AS endTime, status, updated_at AS updatedAt
      FROM availability_slots
      WHERE facilitator_id = ?
      ORDER BY slot_date DESC, start_time DESC`,
     [facilitatorId]
   );
+}
+
+async function updateAvailabilitySlot(facilitatorId, slotId, slotDate, startTime, endTime) {
+  if (!slotDate || !startTime || !endTime) {
+    throw new ApiError(400, 'Slot date, start time, and end time are required');
+  }
+
+  if (new Date(slotDate).toString() === 'Invalid Date') {
+    throw new ApiError(400, 'Slot date is invalid');
+  }
+
+  const rows = await query('SELECT id FROM availability_slots WHERE id = ? AND facilitator_id = ?', [slotId, facilitatorId]);
+  if (!rows.length) {
+    throw new ApiError(404, 'Availability slot not found');
+  }
+
+  await transaction(async (connection) => {
+    await connection.execute(
+      `UPDATE availability_slots
+       SET slot_date = ?, start_time = ?, end_time = ?
+       WHERE id = ? AND facilitator_id = ?`,
+      [slotDate, startTime, endTime, slotId, facilitatorId]
+    );
+
+    await connection.execute(
+      `UPDATE appointments
+       SET scheduled_at = CONCAT(?, ' ', ?)
+       WHERE availability_slot_id = ?`,
+      [slotDate, startTime, slotId]
+    );
+  });
+
+  return { updated: true, slotId: Number(slotId), slotDate, startTime, endTime };
+}
+
+async function deleteAvailabilitySlot(facilitatorId, slotId) {
+  const rows = await query('SELECT id FROM availability_slots WHERE id = ? AND facilitator_id = ?', [slotId, facilitatorId]);
+  if (!rows.length) {
+    throw new ApiError(404, 'Availability slot not found');
+  }
+
+  await transaction(async (connection) => {
+    await connection.execute('DELETE FROM appointments WHERE availability_slot_id = ?', [slotId]);
+    await connection.execute('DELETE FROM availability_slots WHERE id = ? AND facilitator_id = ?', [slotId, facilitatorId]);
+  });
+
+  return { deleted: true, slotId: Number(slotId) };
 }
 
 async function getFacilitatorAppointments(facilitatorId) {
@@ -121,6 +168,46 @@ async function getFacilitatorAppointments(facilitatorId) {
     studentName: row.consentFlag ? row.studentName : 'Private Student',
     studentEmail: row.consentFlag ? row.studentEmail : null
   })));
+}
+
+async function updateFacilitatorAppointment(facilitatorId, appointmentId, purpose, notes) {
+  const rows = await query('SELECT id FROM appointments WHERE id = ? AND facilitator_id = ?', [appointmentId, facilitatorId]);
+  if (!rows.length) {
+    throw new ApiError(404, 'Appointment not found');
+  }
+
+  const nextPurpose = String(purpose || '').trim();
+  if (!nextPurpose) {
+    throw new ApiError(400, 'Purpose is required');
+  }
+
+  await query(
+    'UPDATE appointments SET purpose = ?, notes = ? WHERE id = ? AND facilitator_id = ?',
+    [nextPurpose, notes || null, appointmentId, facilitatorId]
+  );
+
+  return { updated: true, appointmentId: Number(appointmentId), purpose: nextPurpose, notes: notes || null };
+}
+
+async function deleteFacilitatorAppointment(facilitatorId, appointmentId) {
+  const rows = await query(
+    'SELECT id, availability_slot_id AS availabilitySlotId FROM appointments WHERE id = ? AND facilitator_id = ?',
+    [appointmentId, facilitatorId]
+  );
+
+  if (!rows.length) {
+    throw new ApiError(404, 'Appointment not found');
+  }
+
+  await transaction(async (connection) => {
+    if (rows[0].availabilitySlotId) {
+      await connection.execute('UPDATE availability_slots SET status = ? WHERE id = ?', ['open', rows[0].availabilitySlotId]);
+    }
+
+    await connection.execute('DELETE FROM appointments WHERE id = ? AND facilitator_id = ?', [appointmentId, facilitatorId]);
+  });
+
+  return { deleted: true, appointmentId: Number(appointmentId) };
 }
 
 async function updateAppointmentStatus(facilitatorId, appointmentId, status, notes) {
@@ -155,6 +242,10 @@ module.exports = {
   getStudentAppointments,
   createAvailabilitySlot,
   getFacilitatorAvailability,
+  updateAvailabilitySlot,
+  deleteAvailabilitySlot,
   getFacilitatorAppointments,
+  updateFacilitatorAppointment,
+  deleteFacilitatorAppointment,
   updateAppointmentStatus
 };

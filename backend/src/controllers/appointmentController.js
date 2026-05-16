@@ -7,7 +7,11 @@ const {
   getStudentAppointments,
   createAvailabilitySlot,
   getFacilitatorAvailability,
+  updateAvailabilitySlot,
+  deleteAvailabilitySlot,
   getFacilitatorAppointments,
+  updateFacilitatorAppointment,
+  deleteFacilitatorAppointment,
   updateAppointmentStatus
 } = require('../services/appointmentService');
 const { query } = require('../database/pool');
@@ -47,9 +51,33 @@ const createSlot = asyncHandler(async (req, res) => {
   res.status(201).json(result);
 });
 
+const updateSlot = asyncHandler(async (req, res) => {
+  const result = await updateAvailabilitySlot(req.user.id, req.params.id, req.body.slotDate, req.body.startTime, req.body.endTime);
+  emitAppointmentUpdate({ type: 'availability_updated', facilitatorId: req.user.id, slotId: req.params.id });
+  res.json(result);
+});
+
+const deleteSlot = asyncHandler(async (req, res) => {
+  const result = await deleteAvailabilitySlot(req.user.id, req.params.id);
+  emitAppointmentUpdate({ type: 'availability_deleted', facilitatorId: req.user.id, slotId: req.params.id });
+  res.json(result);
+});
+
 const facilitatorAppointments = asyncHandler(async (req, res) => {
   const items = await getFacilitatorAppointments(req.user.id);
   res.json({ items });
+});
+
+const updateQueueItem = asyncHandler(async (req, res) => {
+  const result = await updateFacilitatorAppointment(req.user.id, req.params.id, req.body.purpose, req.body.notes);
+  emitAppointmentUpdate({ type: 'appointment_updated', facilitatorId: req.user.id, appointmentId: req.params.id });
+  res.json(result);
+});
+
+const deleteQueueItem = asyncHandler(async (req, res) => {
+  const result = await deleteFacilitatorAppointment(req.user.id, req.params.id);
+  emitAppointmentUpdate({ type: 'appointment_deleted', facilitatorId: req.user.id, appointmentId: req.params.id });
+  res.json(result);
 });
 
 const updateStatus = asyncHandler(async (req, res) => {
@@ -70,6 +98,10 @@ module.exports = {
   cancel,
   facilitatorAvailability,
   createSlot,
+  updateSlot,
+  deleteSlot,
   facilitatorAppointments,
+  updateQueueItem,
+  deleteQueueItem,
   updateStatus
 };
