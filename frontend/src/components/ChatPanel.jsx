@@ -16,6 +16,7 @@ export function ChatPanel({
   const [isLoading, setIsLoading] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [remoteIsTyping, setRemoteIsTyping] = useState(false);
+  const [conversationId, setConversationId] = useState(null);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
@@ -31,7 +32,7 @@ export function ChatPanel({
     scrollToBottom();
   }, [messages]);
 
-  // Initialize socket and fetch message history
+  // Initialize socket and fetch message history or conversation messages
   useEffect(() => {
     if (!isOpen) return;
 
@@ -41,12 +42,48 @@ export function ChatPanel({
       return;
     }
 
-    // Load message history
-    const loadHistory = async () => {
+    const loadConversation = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get(`/messages/history/${roomId}?limit=50`);
-        setMessages(response.data || []);
+        // If we already have a conversationId (selected), load messages from it
+        if (conversationId) {
+          const resp = await api.get(`/messages/conversations/${conversationId}/messages?limit=200`);
+          const data = resp.data || [];
+          // map to legacy shape
+          const mapped = data.map((m) => ({
+            id: m.id,
+            senderId: m.sender_id,
+            receiverId: m.sender_id === studentId ? facilitatorId : studentId,
+            message: m.content,
+            createdAt: m.created_at,
+            isRead: m.is_read
+          }));
+          setMessages(mapped);
+        } else {
+          // Ensure conversation exists, then load messages
+          try {
+            const createResp = await api.post('/messages/conversations', { studentId, facilitatorId });
+            const conv = createResp.data;
+            if (conv && conv.id) {
+              setConversationId(conv.id);
+              const resp = await api.get(`/messages/conversations/${conv.id}/messages?limit=200`);
+              const data = resp.data || [];
+              const mapped = data.map((m) => ({
+                id: m.id,
+                senderId: m.sender_id,
+                receiverId: m.sender_id === studentId ? facilitatorId : studentId,
+                message: m.content,
+                createdAt: m.created_at,
+                isRead: m.is_read
+              }));
+              setMessages(mapped);
+            }
+          } catch (err) {
+            // Fallback to legacy room history
+            const response = await api.get(`/messages/history/${roomId}?limit=50`);
+            setMessages(response.data || []);
+          }
+        }
       } catch (error) {
         console.error('Failed to load message history:', error);
       } finally {
@@ -54,13 +91,14 @@ export function ChatPanel({
       }
     };
 
-    loadHistory();
+    loadConversation();
 
     // Join room
     socket.emit('join_room', { studentId, facilitatorId });
 
     // Listen for incoming messages
     socket.on('receive_message', (message) => {
+      // If conversationId exists and message has conversationId, append
       setMessages((prev) => [...prev, message]);
 
       // Mark message as read if we're the receiver
@@ -90,7 +128,7 @@ export function ChatPanel({
       socket.off('typing_indicator');
       socket.off('messages_read');
     };
-  }, [isOpen, roomId, studentId, facilitatorId]);
+  }, [isOpen, roomId, studentId, facilitatorId, conversationId]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -112,8 +150,18 @@ export function ChatPanel({
       roomId,
       senderId: studentId,
       receiverId: facilitatorId,
-      message
+      message,
+      conversationId
     });
+
+    // Also POST via REST to persist (in case socket missed)
+    if (conversationId) {
+      try {
+        await api.post(`/messages/conversations/${conversationId}/messages`, { content: message });
+      } catch (err) {
+        // ignore; socket already attempted save
+      }
+    }
   };
 
   const handleInputChange = (e) => {

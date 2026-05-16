@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const env = require('../config/env');
 const messageModel = require('../models/message.model');
+const conversationModel = require('../models/conversation.model');
 
 // Store active users: { userId: socketId }
 const activeUsers = {};
@@ -56,13 +57,40 @@ function setupChatSocket(io) {
         const { roomId, receiverId, message } = data;
         const senderId = socket.userId;
 
-        // Save message to database
+        // Save message to legacy messages table for compatibility
         const savedMessage = await messageModel.saveMessage({
           sender_id: senderId,
           receiver_id: receiverId,
           room_id: roomId,
           message
         });
+
+        // Also persist into conversations / conversation_messages
+        // Parse roomId expecting format chat_{min}_{max}
+        const parts = String(roomId || '').split('_');
+        let conv = null;
+        if (parts.length === 3 && parts[0] === 'chat') {
+          const a = Number(parts[1]);
+          const b = Number(parts[2]);
+          // determine student/facilitator by roles: if socket.userRole === 'student' then studentId=socket.userId else choose other
+          let studentId = a;
+          let facilitatorId = b;
+          // If both numeric, ensure mapping: if sender role is facilitator and senderId equals a, swap
+          if (socket.userRole === 'student') {
+            studentId = socket.userId;
+            facilitatorId = (socket.userId === a) ? b : a;
+          } else if (socket.userRole === 'ogc' || socket.userRole === 'facilitator') {
+            facilitatorId = socket.userId;
+            studentId = (socket.userId === a) ? b : a;
+          }
+
+          try {
+            conv = await conversationModel.getOrCreateConversation(studentId, facilitatorId);
+            await conversationModel.createMessage(conv.id, senderId, socket.userRole === 'ogc' ? 'facilitator' : socket.userRole, message);
+          } catch (err) {
+            console.warn('Failed to save conversation message:', err.message || err);
+          }
+        }
 
         // Emit message to room
         io.to(roomId).emit('receive_message', {
@@ -72,7 +100,8 @@ function setupChatSocket(io) {
           message,
           createdAt: new Date().toISOString(),
           isRead: false,
-          roomId
+          roomId,
+          conversationId: conv ? conv.id : null
         });
       } catch (error) {
         console.error('Error sending message:', error);

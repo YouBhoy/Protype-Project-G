@@ -1,9 +1,43 @@
 const express = require('express');
 const { authenticate } = require('../middleware/auth');
 const messageModel = require('../models/message.model');
+const { query } = require('../database/pool');
 const asyncHandler = require('../utils/asyncHandler');
 
 const router = express.Router();
+
+// Get assigned facilitator for a student
+router.get(
+  '/assigned-facilitator',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    if (req.user.role !== 'student') {
+      return res.status(403).json({
+        success: false,
+        error: 'only_students_allowed',
+        message: 'Only students can query assigned facilitator'
+      });
+    }
+
+    const studentId = req.user.id;
+    // Try to determine student's college from token or DB
+    const college = req.user.college || null;
+
+    if (!college) {
+      return res.status(404).json({ success: false, message: 'Student college not available' });
+    }
+
+    // Find a facilitator assigned to the student's college
+    const rows = await query('SELECT id, name, email, assigned_college AS assignedCollege FROM facilitators WHERE assigned_college = ? LIMIT 1', [college]);
+
+    if (!rows.length) {
+      return res.status(404).json({ success: false, message: 'No facilitator assigned for your college' });
+    }
+
+    const facilitator = rows[0];
+    res.json({ success: true, facilitator });
+  })
+);
 
 // Get message history for a room (JWT protected)
 router.get(
@@ -114,4 +148,85 @@ router.post(
   })
 );
 
+// Conversation endpoints using the new conversation model
+const conversationModel = require('../models/conversation.model');
+
+// Get conversations for the authenticated user
+router.get(
+  '/conversations/list',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const userId = req.user.id;
+    const role = req.user.role;
+    const { limit = 50, offset = 0 } = req.query;
+    const conv = await conversationModel.getConversationsForUser(userId, role, parseInt(limit, 10), parseInt(offset, 10));
+    res.json({ success: true, data: conv, count: conv.length });
+  })
+);
+
+// Create a new conversation between student and facilitator
+router.post(
+  '/conversations',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const { studentId, facilitatorId } = req.body;
+    if (!studentId || !facilitatorId) {
+      return res.status(400).json({ success: false, message: 'studentId and facilitatorId are required' });
+    }
+    const conv = await conversationModel.getOrCreateConversation(parseInt(studentId, 10), parseInt(facilitatorId, 10));
+    res.json({ success: true, data: conv });
+  })
+);
+
+// Student can request assignment; try to find facilitator by student's college and create conversation
+router.post(
+  '/request-assignment',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    if (req.user.role !== 'student') {
+      return res.status(403).json({ success: false, message: 'Only students may request assignment' });
+    }
+    const studentId = req.user.id;
+    const college = req.user.college || null;
+    if (!college) return res.status(400).json({ success: false, message: 'Student college not available' });
+
+    const rows = await query('SELECT id, name, email, assigned_college AS assignedCollege FROM facilitators WHERE assigned_college = ? LIMIT 1', [college]);
+    if (!rows.length) return res.status(404).json({ success: false, message: 'No facilitator available for your college' });
+
+    const facilitator = rows[0];
+    const conv = await conversationModel.getOrCreateConversation(studentId, facilitator.id);
+    res.json({ success: true, facilitator, conversation: conv });
+  })
+);
+
+// Get messages for a conversation
+router.get(
+  '/conversations/:conversationId/messages',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const { conversationId } = req.params;
+    const { limit = 100, offset = 0 } = req.query;
+    const msgs = await conversationModel.getMessages(parseInt(conversationId, 10), parseInt(limit, 10), parseInt(offset, 10));
+    res.json({ success: true, data: msgs, count: msgs.length });
+  })
+);
+
+// Post a message to a conversation
+router.post(
+  '/conversations/:conversationId/messages',
+  authenticate,
+  asyncHandler(async (req, res) => {
+    const { conversationId } = req.params;
+    const { content } = req.body;
+    if (!content) {
+      return res.status(400).json({ success: false, message: 'Message content required' });
+    }
+    const senderId = req.user.id;
+    const senderRole = req.user.role === 'ogc' ? 'facilitator' : req.user.role;
+    const msg = await conversationModel.createMessage(parseInt(conversationId, 10), senderId, senderRole, content);
+    res.json({ success: true, data: msg });
+  })
+);
+
 module.exports = router;
+

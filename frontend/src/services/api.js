@@ -35,6 +35,27 @@ function getStoredTokenForRole(preferredRole) {
     }
   }
 
+  // Route-aware fallback: when no preferred role is provided (e.g. /auth/me),
+  // pick token based on current path to avoid using a student token in facilitator routes.
+  const path = window.location?.pathname || '';
+  if (path.startsWith('/facilitator')) {
+    if (facilitatorPayload?.role === 'ogc') {
+      return facilitatorToken;
+    }
+    if (studentPayload?.role === 'ogc') {
+      return studentToken;
+    }
+  }
+
+  if (path.startsWith('/student')) {
+    if (studentPayload?.role === 'student') {
+      return studentToken;
+    }
+    if (facilitatorPayload?.role === 'student') {
+      return facilitatorToken;
+    }
+  }
+
   if (studentPayload?.role === 'student') {
     return studentToken;
   }
