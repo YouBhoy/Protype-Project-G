@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { api } from '../services/api';
 
 const AuthContext = createContext(null);
 
-function getStoredTokenForCurrentRoute() {
-  const path = window.location.pathname || '';
+function getStoredTokenForCurrentRoute(pathname = window.location.pathname || '') {
+  const path = pathname;
 
   if (path.startsWith('/facilitator')) {
     return localStorage.getItem('spartang_facilitator_token')
@@ -28,11 +29,19 @@ function getStoredTokenForCurrentRoute() {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const initialToken = getStoredTokenForCurrentRoute();
+  const location = useLocation();
+  const initialToken = getStoredTokenForCurrentRoute(location?.pathname);
   const [token, setToken] = useState(initialToken);
   const [loading, setLoading] = useState(Boolean(initialToken));
 
   useEffect(() => {
+    // Keep token selection in sync with route changes so the appropriate
+    // stored token is used when navigating between student/facilitator areas.
+    const stored = getStoredTokenForCurrentRoute(location?.pathname);
+    if (stored && stored !== token) {
+      setToken(stored);
+    }
+
     if (!token) {
       // No token — not loading and clear any user
       setLoading(false);
