@@ -8,40 +8,24 @@ export function ConversationList({ onSelectConversation, selectedStudentId }) {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    let active = true;
-
-    const token = localStorage.getItem('spartang_facilitator_token')
-      || localStorage.getItem('spartang_student_token');
-
-    if (!token) {
-      setError('No authentication token found');
-      setIsLoading(false);
-      return;
-    }
-
     const fetchConversations = async () => {
       try {
         setIsLoading(true);
-        setError('');
-
         const response = await api.get('/messages/conversations?limit=20');
-        const data = response?.data?.data || response?.data || response || [];
-        const items = Array.isArray(data) ? data : [];
-        if (!active) return;
-        setConversations(items);
+        setConversations(response.data || []);
       } catch (err) {
-        const message = err?.response?.data?.message || err.message || String(err);
-        if (!active) return;
-        setError('Failed to load conversations: ' + message);
-        console.error('ConversationList fetch error:', err);
+        setError('Failed to load conversations');
+        console.error(err);
       } finally {
-        if (active) setIsLoading(false);
+        setIsLoading(false);
       }
     };
 
+    // Poll for new conversations every 5 seconds
     fetchConversations();
+    const interval = setInterval(fetchConversations, 5000);
 
-    return () => { active = false; };
+    return () => clearInterval(interval);
   }, []);
 
   if (isLoading) {
@@ -56,15 +40,6 @@ export function ConversationList({ onSelectConversation, selectedStudentId }) {
     return <div className="conversation-list-empty">No conversations yet</div>;
   }
 
-  const getConversationName = (conversation) => {
-    if (conversation.student_name) {
-      return conversation.student_name;
-    }
-
-    const parts = [conversation.first_name, conversation.last_name].filter(Boolean);
-    return parts.length ? parts.join(' ') : 'Student';
-  };
-
   return (
     <div className="conversation-list">
       <div className="conversation-list-header">
@@ -78,12 +53,11 @@ export function ConversationList({ onSelectConversation, selectedStudentId }) {
             className={`conversation-item ${
               selectedStudentId === conversation.student_id ? 'active' : ''
             }`}
-            type="button"
             onClick={() => onSelectConversation(conversation)}
           >
             <div className="conversation-info">
               <div className="conversation-name">
-                {getConversationName(conversation)}
+                {conversation.first_name} {conversation.last_name}
               </div>
               <div className="conversation-preview">
                 {conversation.last_message?.substring(0, 50)}

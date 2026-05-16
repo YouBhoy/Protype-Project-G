@@ -11,29 +11,8 @@ const messagesRoutes = require('./routes/messagesRoutes');
 
 const app = express();
 
-function isAllowedOrigin(origin) {
-  if (!origin) {
-    return true;
-  }
-
-  if (env.clientOrigins.includes(origin)) {
-    return true;
-  }
-
-  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
-}
-
 app.use(helmet());
-app.use(cors({
-  origin(origin, callback) {
-    if (isAllowedOrigin(origin)) {
-      return callback(null, true);
-    }
-
-    return callback(new Error(`CORS blocked origin: ${origin}`));
-  },
-  credentials: true
-}));
+app.use(cors({ origin: env.clientOrigin, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/api/health', (req, res) => {

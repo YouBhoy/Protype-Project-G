@@ -46,7 +46,8 @@ export function PrivateRoute({ children, role }) {
   }
 
   if (role && currentRole !== role) {
-    return <Navigate to="/" replace />;
+    const fallback = currentRole === 'ogc' ? '/facilitator/dashboard' : '/student/dashboard';
+    return <Navigate to={fallback} replace />;
   }
 
   return children;

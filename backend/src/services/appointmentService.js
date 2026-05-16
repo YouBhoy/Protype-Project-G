@@ -2,28 +2,35 @@ const { query, transaction } = require('../database/pool');
 const ApiError = require('../utils/apiError');
 const { pseudonymizeStudentId } = require('../utils/pseudonymize');
 
-async function getStudentAvailableSlots(studentCollege) {
+async function getStudentAvailableSlots() {
   return query(
     `SELECT s.id, s.slot_date AS slotDate, s.start_time AS startTime, s.end_time AS endTime,
             f.name AS facilitatorName, f.assigned_college AS assignedCollege
      FROM availability_slots s
      JOIN facilitators f ON f.id = s.facilitator_id
-     WHERE s.status = 'open' AND f.assigned_college = ?
+     WHERE s.status = 'open'
      ORDER BY s.slot_date ASC, s.start_time ASC`,
-    [studentCollege]
+    []
   );
 }
 
 async function requestAppointment(studentId, slotId, purpose) {
+  if (!slotId) {
+    throw new ApiError(400, 'A slot must be selected');
+  }
+
+  if (!String(purpose || '').trim()) {
+    throw new ApiError(400, 'Purpose is required');
+  }
+
   return transaction(async (connection) => {
     const slotRows = await connection.execute(
       `SELECT s.id, s.facilitator_id AS facilitatorId, s.slot_date AS slotDate, s.start_time AS startTime, s.end_time AS endTime, s.status,
               f.assigned_college AS assignedCollege
        FROM availability_slots s
        JOIN facilitators f ON f.id = s.facilitator_id
-       JOIN students st ON st.id = ?
-       WHERE s.id = ? AND s.status = 'open' AND f.assigned_college = st.college`,
-      [studentId, slotId]
+       WHERE s.id = ? AND s.status = 'open'`,
+      [slotId]
     );
 
     if (!slotRows[0].length) {
@@ -61,7 +68,7 @@ async function cancelAppointment(studentId, appointmentId) {
 
 async function getStudentAppointments(studentId) {
   return query(
-    `SELECT a.id, a.purpose, a.scheduled_at AS scheduledAt, a.status, f.name AS facilitatorName,
+    `SELECT a.id, a.purpose, a.scheduled_at AS scheduledAt, a.status, a.updated_at AS updatedAt, f.name AS facilitatorName,
             f.assigned_college AS assignedCollege
      FROM appointments a
      JOIN facilitators f ON f.id = a.facilitator_id
@@ -72,6 +79,14 @@ async function getStudentAppointments(studentId) {
 }
 
 async function createAvailabilitySlot(facilitatorId, slotDate, startTime, endTime) {
+  if (!slotDate || !startTime || !endTime) {
+    throw new ApiError(400, 'Slot date, start time, and end time are required');
+  }
+
+  if (new Date(slotDate).toString() === 'Invalid Date') {
+    throw new ApiError(400, 'Slot date is invalid');
+  }
+
   const result = await query(
     `INSERT INTO availability_slots (facilitator_id, slot_date, start_time, end_time, status)
      VALUES (?, ?, ?, ?, 'open')`,
@@ -82,7 +97,7 @@ async function createAvailabilitySlot(facilitatorId, slotDate, startTime, endTim
 
 async function getFacilitatorAvailability(facilitatorId) {
   return query(
-    `SELECT id, slot_date AS slotDate, start_time AS startTime, end_time AS endTime, status
+    `SELECT id, slot_date AS slotDate, start_time AS startTime, end_time AS endTime, status, updated_at AS updatedAt
      FROM availability_slots
      WHERE facilitator_id = ?
      ORDER BY slot_date DESC, start_time DESC`,
@@ -90,16 +105,63 @@ async function getFacilitatorAvailability(facilitatorId) {
   );
 }
 
-async function getFacilitatorAppointments(facilitatorId, assignedCollege) {
+async function updateAvailabilitySlot(facilitatorId, slotId, slotDate, startTime, endTime) {
+  if (!slotDate || !startTime || !endTime) {
+    throw new ApiError(400, 'Slot date, start time, and end time are required');
+  }
+
+  if (new Date(slotDate).toString() === 'Invalid Date') {
+    throw new ApiError(400, 'Slot date is invalid');
+  }
+
+  const rows = await query('SELECT id FROM availability_slots WHERE id = ? AND facilitator_id = ?', [slotId, facilitatorId]);
+  if (!rows.length) {
+    throw new ApiError(404, 'Availability slot not found');
+  }
+
+  await transaction(async (connection) => {
+    await connection.execute(
+      `UPDATE availability_slots
+       SET slot_date = ?, start_time = ?, end_time = ?
+       WHERE id = ? AND facilitator_id = ?`,
+      [slotDate, startTime, endTime, slotId, facilitatorId]
+    );
+
+    await connection.execute(
+      `UPDATE appointments
+       SET scheduled_at = CONCAT(?, ' ', ?)
+       WHERE availability_slot_id = ?`,
+      [slotDate, startTime, slotId]
+    );
+  });
+
+  return { updated: true, slotId: Number(slotId), slotDate, startTime, endTime };
+}
+
+async function deleteAvailabilitySlot(facilitatorId, slotId) {
+  const rows = await query('SELECT id FROM availability_slots WHERE id = ? AND facilitator_id = ?', [slotId, facilitatorId]);
+  if (!rows.length) {
+    throw new ApiError(404, 'Availability slot not found');
+  }
+
+  await transaction(async (connection) => {
+    await connection.execute('DELETE FROM appointments WHERE availability_slot_id = ?', [slotId]);
+    await connection.execute('DELETE FROM availability_slots WHERE id = ? AND facilitator_id = ?', [slotId, facilitatorId]);
+  });
+
+  return { deleted: true, slotId: Number(slotId) };
+}
+
+async function getFacilitatorAppointments(facilitatorId) {
   return query(
-    `SELECT a.id, a.purpose, a.scheduled_at AS scheduledAt, a.status,
+    `SELECT a.id, a.purpose, a.notes, a.scheduled_at AS scheduledAt, a.status, a.updated_at AS updatedAt,
             s.student_id AS studentId, s.name AS studentName, s.email AS studentEmail,
             s.college, s.consent_flag AS consentFlag
      FROM appointments a
      JOIN students s ON s.id = a.student_id
-     WHERE a.facilitator_id = ? AND s.college = ?
+     WHERE a.facilitator_id = ?
      ORDER BY a.scheduled_at DESC`,
-    [facilitatorId, assignedCollege]
+    [facilitatorId]
   ).then((rows) => rows.map((row) => ({
     ...row,
     studentId: pseudonymizeStudentId(row.studentId),
@@ -108,22 +170,69 @@ async function getFacilitatorAppointments(facilitatorId, assignedCollege) {
   })));
 }
 
+async function updateFacilitatorAppointment(facilitatorId, appointmentId, purpose, notes) {
+  const rows = await query('SELECT id FROM appointments WHERE id = ? AND facilitator_id = ?', [appointmentId, facilitatorId]);
+  if (!rows.length) {
+    throw new ApiError(404, 'Appointment not found');
+  }
+
+  const nextPurpose = String(purpose || '').trim();
+  if (!nextPurpose) {
+    throw new ApiError(400, 'Purpose is required');
+  }
+
+  await query(
+    'UPDATE appointments SET purpose = ?, notes = ? WHERE id = ? AND facilitator_id = ?',
+    [nextPurpose, notes || null, appointmentId, facilitatorId]
+  );
+
+  return { updated: true, appointmentId: Number(appointmentId), purpose: nextPurpose, notes: notes || null };
+}
+
+async function deleteFacilitatorAppointment(facilitatorId, appointmentId) {
+  const rows = await query(
+    'SELECT id, availability_slot_id AS availabilitySlotId FROM appointments WHERE id = ? AND facilitator_id = ?',
+    [appointmentId, facilitatorId]
+  );
+
+  if (!rows.length) {
+    throw new ApiError(404, 'Appointment not found');
+  }
+
+  await transaction(async (connection) => {
+    if (rows[0].availabilitySlotId) {
+      await connection.execute('UPDATE availability_slots SET status = ? WHERE id = ?', ['open', rows[0].availabilitySlotId]);
+    }
+
+    await connection.execute('DELETE FROM appointments WHERE id = ? AND facilitator_id = ?', [appointmentId, facilitatorId]);
+  });
+
+  return { deleted: true, appointmentId: Number(appointmentId) };
+}
+
 async function updateAppointmentStatus(facilitatorId, appointmentId, status, notes) {
   const rows = await query('SELECT * FROM appointments WHERE id = ? AND facilitator_id = ?', [appointmentId, facilitatorId]);
   if (!rows.length) {
     throw new ApiError(404, 'Appointment not found');
   }
 
+  const normalizedStatus = String(status || '').trim().toLowerCase();
+  if (!['pending', 'accepted', 'approved', 'rejected', 'cancelled', 'completed'].includes(normalizedStatus)) {
+    throw new ApiError(400, 'Invalid appointment status');
+  }
+
+  const statusToSave = normalizedStatus === 'approved' ? 'accepted' : normalizedStatus;
+
   await transaction(async (connection) => {
-    await connection.execute('UPDATE appointments SET status = ?, notes = ? WHERE id = ?', [status, notes || null, appointmentId]);
-    if (status === 'rejected' || status === 'cancelled') {
+    await connection.execute('UPDATE appointments SET status = ?, notes = ? WHERE id = ?', [statusToSave, notes || null, appointmentId]);
+    if (statusToSave === 'rejected' || statusToSave === 'cancelled') {
       if (rows[0].availability_slot_id) {
         await connection.execute('UPDATE availability_slots SET status = ? WHERE id = ?', ['open', rows[0].availability_slot_id]);
       }
     }
   });
 
-  return { status };
+  return { status: statusToSave };
 }
 
 module.exports = {
@@ -133,6 +242,10 @@ module.exports = {
   getStudentAppointments,
   createAvailabilitySlot,
   getFacilitatorAvailability,
+  updateAvailabilitySlot,
+  deleteAvailabilitySlot,
   getFacilitatorAppointments,
+  updateFacilitatorAppointment,
+  deleteFacilitatorAppointment,
   updateAppointmentStatus
 };
