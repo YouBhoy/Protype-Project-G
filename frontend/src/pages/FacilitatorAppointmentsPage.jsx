@@ -24,6 +24,26 @@ export function FacilitatorAppointmentsPage() {
   const [selectedAppointmentDetail, setSelectedAppointmentDetail] = useState(null);
   const [appointmentForm, setAppointmentForm] = useState({ purpose: '', notes: '' });
 
+  function replaceSlotInState(slotId, nextSlot) {
+    setAvailability((current) => current.map((slot) => (
+      String(slot.id) === String(slotId) ? { ...slot, ...nextSlot } : slot
+    )));
+  }
+
+  function removeSlotFromState(slotId) {
+    setAvailability((current) => current.filter((slot) => String(slot.id) !== String(slotId)));
+  }
+
+  function replaceAppointmentInState(appointmentId, nextAppointment) {
+    setAppointments((current) => current.map((appointment) => (
+      String(appointment.id) === String(appointmentId) ? { ...appointment, ...nextAppointment } : appointment
+    )));
+  }
+
+  function removeAppointmentFromState(appointmentId) {
+    setAppointments((current) => current.filter((appointment) => String(appointment.id) !== String(appointmentId)));
+  }
+
   async function loadData() {
     const [appointmentsData, availabilityData] = await Promise.all([
       api.get('/facilitator/appointments'),
@@ -70,12 +90,28 @@ export function FacilitatorAppointmentsPage() {
     if (!form.slotDate || !form.startTime || !form.endTime) {
       return;
     }
+
     if (selectedSlotId) {
-      await api.patch(`/facilitator/availability/${selectedSlotId}`, form);
+      const updated = await api.patch(`/facilitator/availability/${selectedSlotId}`, form);
+      replaceSlotInState(selectedSlotId, {
+        slotDate: updated.slotDate,
+        startTime: updated.startTime,
+        endTime: updated.endTime
+      });
       setSelectedSlotId(null);
+      setSelectedSlotDetail(null);
     } else {
-      await api.post('/facilitator/availability', form);
+      const created = await api.post('/facilitator/availability', form);
+      const nextSlot = {
+        id: created.slotId,
+        slotDate: form.slotDate,
+        startTime: form.startTime,
+        endTime: form.endTime,
+        status: 'open'
+      };
+      setAvailability((current) => [nextSlot, ...current]);
     }
+
     setForm({ slotDate: '', startTime: '09:00', endTime: '09:30' });
     await loadData();
   }
@@ -101,6 +137,7 @@ export function FacilitatorAppointmentsPage() {
     }
 
     await api.del(`/facilitator/availability/${slotId}`);
+    removeSlotFromState(slotId);
     if (selectedSlotId === slotId) {
       setSelectedSlotId(null);
       setForm({ slotDate: '', startTime: '09:00', endTime: '09:30' });
@@ -130,8 +167,13 @@ export function FacilitatorAppointmentsPage() {
       return;
     }
 
-    await api.patch(`/facilitator/appointments/${selectedAppointmentId}`, appointmentForm);
+    const updated = await api.patch(`/facilitator/appointments/${selectedAppointmentId}`, appointmentForm);
+    replaceAppointmentInState(selectedAppointmentId, {
+      purpose: updated.purpose,
+      notes: updated.notes
+    });
     setSelectedAppointmentId(null);
+    setSelectedAppointmentDetail(null);
     setAppointmentForm({ purpose: '', notes: '' });
     await loadData();
   }
@@ -142,6 +184,7 @@ export function FacilitatorAppointmentsPage() {
     }
 
     await api.del(`/facilitator/appointments/${appointmentId}`);
+    removeAppointmentFromState(appointmentId);
     if (selectedAppointmentId === appointmentId) {
       setSelectedAppointmentId(null);
       setAppointmentForm({ purpose: '', notes: '' });
