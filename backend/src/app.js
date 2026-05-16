@@ -8,11 +8,13 @@ const studentRoutes = require('./routes/studentRoutes');
 const facilitatorRoutes = require('./routes/facilitatorRoutes');
 const publicRoutes = require('./routes/publicRoutes');
 const messagesRoutes = require('./routes/messagesRoutes');
+const conversationsRoutes = require('./routes/conversationsRoutes');
 
 const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: env.clientOrigin, credentials: true }));
+// Allow multiple configured client origins (comma-separated in env)
+app.use(cors({ origin: env.clientOrigins, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/api/health', (req, res) => {
@@ -24,6 +26,7 @@ app.use('/api/student', studentRoutes);
 app.use('/api/facilitator', facilitatorRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/messages', messagesRoutes);
+app.use('/api/conversations', conversationsRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: 'not_found', message: 'Route not found' });

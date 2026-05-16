@@ -4,6 +4,7 @@ const app = require('./app');
 const env = require('./config/env');
 const { pool } = require('./database/pool');
 const setupChatSocket = require('./sockets/chat.socket');
+const conversationModel = require('./models/conversation.model');
 
 async function bootstrap() {
   try {
@@ -17,11 +18,19 @@ async function bootstrap() {
     }
   }
 
+  // Ensure conversation schema exists
+  try {
+    await conversationModel.ensureSchema();
+    console.log('Conversation schema ensured');
+  } catch (err) {
+    console.warn('Could not ensure conversation schema:', err.message || err);
+  }
+
   // Create HTTP server and attach Socket.io
   const httpServer = http.createServer(app);
   const io = new Server(httpServer, {
     cors: {
-      origin: env.clientOrigin,
+      origin: env.clientOrigins,
       credentials: true
     }
   });
@@ -32,6 +41,20 @@ async function bootstrap() {
   httpServer.listen(env.port, () => {
     console.log(`SPARTAN-G API listening on port ${env.port}`);
   });
+
+  // Handle unhandled promise rejections
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  });
+
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+    process.exit(1);
+  });
 }
 
-bootstrap();
+bootstrap().catch((error) => {
+  console.error('Bootstrap failed:', error);
+  process.exit(1);
+});

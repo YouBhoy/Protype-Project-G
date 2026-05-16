@@ -1,0 +1,33 @@
+Page Title: SPARTAN-G
+URL: http://localhost:5173/facilitator/chat
+
+Recent events:
+- [2026-05-16T13:27:38.244Z] (console) [warning] Socket not connected
+- [2026-05-16T13:27:38.244Z] (console) [warning] Socket not connected
+- [1969-12-31T23:59:59.999Z] (requestFailed) GET request to http://localhost:4000/socket.io/?EIO=4&transport=polling&t=dsdiyox6 failed: "net::ERR_CONNECTION_REFUSED"
+- [2026-05-16T13:27:39.153Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:27:39.154Z] (console) [error] Socket connection error: TransportError: xhr poll error
+- [1969-12-31T23:59:59.999Z] (requestFailed) GET request to http://localhost:4000/socket.io/?EIO=4&transport=polling&t=dsdrjgt2 failed: "net::ERR_CONNECTION_REFUSED"
+- [2026-05-16T13:27:39.232Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:27:39.232Z] (console) [error] Socket connection error: TransportError: xhr poll error
+- [1969-12-31T23:59:59.999Z] (requestFailed) GET request to http://localhost:4000/api/messages/conversations/list?limit=20 failed: "net::ERR_CONNECTION_REFUSED"
+- [2026-05-16T13:27:39.479Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:27:39.479Z] (console) [error] Error: Network error: could not reach API at http://localhost:4000/api. Check that the backend is running and CORS allows http://localhost:5173
+- [1969-12-31T23:59:59.999Z] (requestFailed) GET request to http://localhost:4000/api/messages/conversations/list?limit=50 failed: "net::ERR_CONNECTION_REFUSED"
+- [2026-05-16T13:27:40.703Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:27:40.703Z] (console) [warning] Failed to load chat metrics Error: Network error: could not reach API at http://localhost:4000/api. Check that the backend is running and CORS allows http://localhost:5173
+- [1969-12-31T23:59:59.999Z] (requestFailed) GET request to http://localhost:4000/socket.io/?EIO=4&transport=polling&t=duqe2vzs failed: "net::ERR_CONNECTION_REFUSED"
+- [2026-05-16T13:29:29.170Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:29:29.170Z] (console) [error] Socket connection error: TransportError: xhr poll error
+- [2026-05-16T13:29:29.232Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:29:29.232Z] (console) [error] Socket connection error: TransportError: xhr poll error
+- [2026-05-16T13:29:29.940Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:29:29.940Z] (console) [error] Error: Network error: could not reach API at http://localhost:4000/api. Check that the backend is running and CORS allows http://localhost:5173
+- [2026-05-16T13:37:35.184Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:37:35.184Z] (console) [error] Socket connection error: TransportError: xhr poll error
+- [2026-05-16T13:37:35.278Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:37:35.278Z] (console) [error] Socket connection error: TransportError: xhr poll error
+- [2026-05-16T13:37:35.727Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:37:35.727Z] (console) [error] Error: Network error: could not reach API at http://localhost:4000/api. Check that the backend is running and CORS allows http://localhost:5173
+
+Snapshot saved from browser session.

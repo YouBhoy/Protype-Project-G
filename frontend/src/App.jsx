@@ -50,6 +50,8 @@ export default function App() {
         <Route path="facilitator/dashboard" element={<FacilitatorDashboardPage />} />
         <Route path="facilitator/appointments" element={<FacilitatorAppointmentsPage />} />
         <Route path="facilitator/chat" element={<ChatPage />} />
+        <Route path="facilitator/messages" element={<Navigate to="/facilitator/chat" replace />} />
+        <Route path="ogc/chat" element={<Navigate to="/facilitator/chat" replace />} />
         <Route path="facilitator/resources" element={<EmergencyResourcesPage />} />
       </Route>
 

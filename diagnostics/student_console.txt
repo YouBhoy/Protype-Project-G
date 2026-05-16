@@ -1,0 +1,27 @@
+Page Title: SPARTAN-G
+URL: http://localhost:5173/student/chat
+
+Recent events:
+- [1969-12-31T23:59:59.999Z] (requestFailed) GET request to http://localhost:4000/socket.io/?EIO=4&transport=polling&t=dsdceugh failed: "net::ERR_CONNECTION_REFUSED"
+- [2026-05-16T13:27:38.937Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:27:38.938Z] (console) [error] Socket connection error: TransportError: xhr poll error
+- [1969-12-31T23:59:59.999Z] (requestFailed) GET request to http://localhost:4000/socket.io/?EIO=4&transport=polling&t=dsdl1ezq failed: "net::ERR_CONNECTION_REFUSED"
+- [2026-05-16T13:27:39.169Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:27:39.169Z] (console) [error] Socket connection error: TransportError: xhr poll error
+- [1969-12-31T23:59:59.999Z] (requestFailed) GET request to http://localhost:4000/api/messages/unread/total failed: "net::ERR_CONNECTION_REFUSED"
+- [2026-05-16T13:27:41.269Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:27:41.269Z] (console) [warning] Failed to load chat metrics Error: Network error: could not reach API at http://localhost:4000/api. Check that the backend is running and CORS allows http://localhost:5173
+- [1969-12-31T23:59:59.999Z] (requestFailed) GET request to http://localhost:4000/socket.io/?EIO=4&transport=polling&t=duqlts0g failed: "net::ERR_CONNECTION_REFUSED"
+- [2026-05-16T13:29:29.432Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:29:29.432Z] (console) [error] Socket connection error: TransportError: xhr poll error
+- [1969-12-31T23:59:59.999Z] (requestFailed) GET request to http://localhost:4000/socket.io/?EIO=4&transport=polling&t=duqzoxbx failed: "net::ERR_CONNECTION_REFUSED"
+- [2026-05-16T13:29:29.753Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:29:29.753Z] (console) [error] Socket connection error: TransportError: xhr poll error
+- [2026-05-16T13:37:35.033Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:37:35.033Z] (console) [error] Socket connection error: TransportError: xhr poll error
+- [2026-05-16T13:37:35.200Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:37:35.200Z] (console) [error] Socket connection error: TransportError: xhr poll error
+- [2026-05-16T13:37:35.617Z] (console) [error] Failed to load resource: net::ERR_CONNECTION_REFUSED
+- [2026-05-16T13:37:35.617Z] (console) [warning] Failed to load chat metrics Error: Network error: could not reach API at http://localhost:4000/api. Check that the backend is running and CORS allows http://localhost:5173
+
+Snapshot saved from browser session.

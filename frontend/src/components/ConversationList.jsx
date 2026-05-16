@@ -11,10 +11,10 @@ export function ConversationList({ onSelectConversation, selectedStudentId }) {
     const fetchConversations = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get('/messages/conversations?limit=20');
+        const response = await api.get('/messages/conversations/list?limit=20');
         setConversations(response.data || []);
       } catch (err) {
-        setError('Failed to load conversations');
+        setError(String(err?.message || 'Failed to load conversations'));
         console.error(err);
       } finally {
         setIsLoading(false);
@@ -47,30 +47,26 @@ export function ConversationList({ onSelectConversation, selectedStudentId }) {
         <span className="conversation-count">{conversations.length}</span>
       </div>
       <div className="conversation-list-items">
-        {conversations.map((conversation) => (
-          <button
-            key={conversation.student_id}
-            className={`conversation-item ${
-              selectedStudentId === conversation.student_id ? 'active' : ''
-            }`}
-            onClick={() => onSelectConversation(conversation)}
-          >
-            <div className="conversation-info">
-              <div className="conversation-name">
-                {conversation.first_name} {conversation.last_name}
+        {conversations.map((conversation) => {
+          const id = conversation.id || conversation.student_id;
+          const name = conversation.student_name || conversation.facilitator_name || conversation.name || 'Student';
+          const preview = conversation.last_message || '';
+          return (
+            <button
+              key={id}
+              className={`conversation-item ${selectedStudentId === id ? 'active' : ''}`}
+              onClick={() => onSelectConversation(conversation)}
+            >
+              <div className="conversation-info">
+                <div className="conversation-name">{name}</div>
+                <div className="conversation-preview">{preview?.substring(0, 50)}{preview?.length > 50 ? '...' : ''}</div>
               </div>
-              <div className="conversation-preview">
-                {conversation.last_message?.substring(0, 50)}
-                {conversation.last_message?.length > 50 ? '...' : ''}
-              </div>
-            </div>
-            {conversation.unread_count > 0 && (
-              <span className="conversation-unread">
-                {conversation.unread_count > 9 ? '9+' : conversation.unread_count}
-              </span>
-            )}
-          </button>
-        ))}
+              {conversation.unread_count > 0 && (
+                <span className="conversation-unread">{conversation.unread_count > 9 ? '9+' : conversation.unread_count}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
