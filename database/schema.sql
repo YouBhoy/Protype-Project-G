@@ -138,6 +138,22 @@ CREATE TABLE IF NOT EXISTS emergency_contacts (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS messages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  sender_id INT NOT NULL,
+  receiver_id INT NOT NULL,
+  room_id VARCHAR(100) NOT NULL,
+  message LONGTEXT NOT NULL,
+  is_read BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_messages_room_id (room_id),
+  INDEX idx_messages_receiver_id (receiver_id),
+  INDEX idx_messages_sender_id (sender_id),
+  INDEX idx_messages_created_at (created_at),
+  INDEX idx_messages_is_read (is_read)
+);
+
 CREATE INDEX idx_assessments_student_type ON assessments(student_id, assessment_type, submitted_at DESC);
 CREATE INDEX idx_appointments_facilitator_status ON appointments(facilitator_id, status, scheduled_at);
 CREATE INDEX idx_students_college ON students(college);

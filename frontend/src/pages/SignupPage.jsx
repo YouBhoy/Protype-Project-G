@@ -22,6 +22,28 @@ export function SignupPage() {
     setLoading(true);
     setError('');
 
+    // Basic client-side validation
+    if (!form.studentId.trim()) {
+      setError('Student ID is required');
+      setLoading(false);
+      return;
+    }
+    if (!form.name.trim()) {
+      setError('Full name is required');
+      setLoading(false);
+      return;
+    }
+    if (!form.email.trim() || !form.email.includes('@')) {
+      setError('A valid email is required');
+      setLoading(false);
+      return;
+    }
+    if (!form.password || form.password.length < 8) {
+      setError('Password is required (minimum 8 characters)');
+      setLoading(false);
+      return;
+    }
+
     try {
       await auth.signupStudent(form);
       navigate('/student/consent');

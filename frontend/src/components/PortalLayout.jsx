@@ -5,17 +5,20 @@ import { useAuth } from '../contexts/AuthContext';
 export function PortalLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const resourcesPath = user?.role === 'ogc' ? '/facilitator/resources' : '/student/resources';
 
   const studentLinks = [
     { to: '/student/dashboard', label: 'Dashboard' },
     { to: '/student/assessments', label: 'Assessments' },
     { to: '/student/analytics', label: 'Analytics' },
-    { to: '/student/appointments', label: 'Appointments' }
+    { to: '/student/appointments', label: 'Appointments' },
+    { to: '/student/chat', label: 'Chat' }
   ];
 
   const facilitatorLinks = [
     { to: '/facilitator/dashboard', label: 'Dashboard' },
-    { to: '/facilitator/appointments', label: 'Appointments' }
+    { to: '/facilitator/appointments', label: 'Appointments' },
+    { to: '/facilitator/chat', label: 'Chat' }
   ];
 
   const links = user?.role === 'ogc' ? facilitatorLinks : studentLinks;
@@ -25,11 +28,13 @@ export function PortalLayout() {
     navigate('/login');
   }
 
+  const homePath = user?.role === 'ogc' ? '/facilitator/dashboard' : '/student/dashboard';
+
   return (
     <div className="shell">
       <aside className="sidebar">
-        <Link to="/" className="brand-block">
-          <span className="brand-mark">S</span>
+        <Link to={homePath} className="brand-block">
+          <img src="https://www.nutritionmasterclass.com.ph/sites/default/files/2023-03/Batangas%20State%20University.jpg" alt="BSU Seal" className="brand-mark" />
           <span>
             <strong>SPARTAN-G</strong>
             <small>Wellness monitoring</small>
@@ -42,7 +47,7 @@ export function PortalLayout() {
               {item.label}
             </NavLink>
           ))}
-          <NavLink to="/resources" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+          <NavLink to={resourcesPath} className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
             Emergency Resources
           </NavLink>
         </nav>
@@ -56,8 +61,25 @@ export function PortalLayout() {
           <button className="btn btn-secondary" onClick={handleLogout}>Logout</button>
         </div>
       </aside>
+
+      <header className="portal-header">
+        <div className="portal-header-brand">
+          <img src="https://www.nutritionmasterclass.com.ph/sites/default/files/2023-03/Batangas%20State%20University.jpg" alt="BSU Seal" className="portal-header-seal" />
+          <div className="portal-header-text">
+            <h1>BATANGAS STATE UNIVERSITY</h1>
+            <p>The National Engineering University</p>
+          </div>
+        </div>
+        <div className="portal-header-logout">
+          <span style={{ fontSize: '0.9rem' }}>{user?.name || user?.email}</span>
+          <button className="btn btn-secondary" onClick={handleLogout} style={{ padding: '8px 14px', fontSize: '0.9rem' }}>Logout</button>
+        </div>
+      </header>
+
       <main className="content">
-        <Outlet />
+        <div className="content-overlay">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
