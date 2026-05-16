@@ -2,15 +2,15 @@ const { query, transaction } = require('../database/pool');
 const ApiError = require('../utils/apiError');
 const { pseudonymizeStudentId } = require('../utils/pseudonymize');
 
-async function getStudentAvailableSlots(studentCollege) {
+async function getStudentAvailableSlots() {
   return query(
     `SELECT s.id, s.slot_date AS slotDate, s.start_time AS startTime, s.end_time AS endTime,
             f.name AS facilitatorName, f.assigned_college AS assignedCollege
      FROM availability_slots s
      JOIN facilitators f ON f.id = s.facilitator_id
-     WHERE s.status = 'open' AND f.assigned_college = ?
+     WHERE s.status = 'open'
      ORDER BY s.slot_date ASC, s.start_time ASC`,
-    [studentCollege]
+    []
   );
 }
 
@@ -29,9 +29,8 @@ async function requestAppointment(studentId, slotId, purpose) {
               f.assigned_college AS assignedCollege
        FROM availability_slots s
        JOIN facilitators f ON f.id = s.facilitator_id
-       JOIN students st ON st.id = ?
-       WHERE s.id = ? AND s.status = 'open' AND f.assigned_college = st.college`,
-      [studentId, slotId]
+       WHERE s.id = ? AND s.status = 'open'`,
+      [slotId]
     );
 
     if (!slotRows[0].length) {
