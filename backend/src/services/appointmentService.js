@@ -15,6 +15,14 @@ async function getStudentAvailableSlots(studentCollege) {
 }
 
 async function requestAppointment(studentId, slotId, purpose) {
+  if (!slotId) {
+    throw new ApiError(400, 'A slot must be selected');
+  }
+
+  if (!String(purpose || '').trim()) {
+    throw new ApiError(400, 'Purpose is required');
+  }
+
   return transaction(async (connection) => {
     const slotRows = await connection.execute(
       `SELECT s.id, s.facilitator_id AS facilitatorId, s.slot_date AS slotDate, s.start_time AS startTime, s.end_time AS endTime, s.status,
@@ -72,6 +80,14 @@ async function getStudentAppointments(studentId) {
 }
 
 async function createAvailabilitySlot(facilitatorId, slotDate, startTime, endTime) {
+  if (!slotDate || !startTime || !endTime) {
+    throw new ApiError(400, 'Slot date, start time, and end time are required');
+  }
+
+  if (new Date(slotDate).toString() === 'Invalid Date') {
+    throw new ApiError(400, 'Slot date is invalid');
+  }
+
   const result = await query(
     `INSERT INTO availability_slots (facilitator_id, slot_date, start_time, end_time, status)
      VALUES (?, ?, ?, ?, 'open')`,
@@ -114,16 +130,23 @@ async function updateAppointmentStatus(facilitatorId, appointmentId, status, not
     throw new ApiError(404, 'Appointment not found');
   }
 
+  const normalizedStatus = String(status || '').trim().toLowerCase();
+  if (!['pending', 'accepted', 'approved', 'rejected', 'cancelled', 'completed'].includes(normalizedStatus)) {
+    throw new ApiError(400, 'Invalid appointment status');
+  }
+
+  const statusToSave = normalizedStatus === 'approved' ? 'accepted' : normalizedStatus;
+
   await transaction(async (connection) => {
-    await connection.execute('UPDATE appointments SET status = ?, notes = ? WHERE id = ?', [status, notes || null, appointmentId]);
-    if (status === 'rejected' || status === 'cancelled') {
+    await connection.execute('UPDATE appointments SET status = ?, notes = ? WHERE id = ?', [statusToSave, notes || null, appointmentId]);
+    if (statusToSave === 'rejected' || statusToSave === 'cancelled') {
       if (rows[0].availability_slot_id) {
         await connection.execute('UPDATE availability_slots SET status = ? WHERE id = ?', ['open', rows[0].availability_slot_id]);
       }
     }
   });
 
-  return { status };
+  return { status: statusToSave };
 }
 
 module.exports = {

@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import { RiskBadge } from '../components/RiskBadge';
+
+function getAppointmentTone(status) {
+  const normalized = String(status || '').toLowerCase();
+  if (normalized === 'accepted' || normalized === 'approved') return 'primary';
+  if (normalized === 'pending') return 'warning';
+  if (normalized === 'cancelled' || normalized === 'rejected') return 'danger';
+  if (normalized === 'completed') return 'primary';
+  return 'primary';
+}
 
 export function AppointmentsPage() {
   const [slots, setSlots] = useState([]);
@@ -22,9 +30,21 @@ export function AppointmentsPage() {
     loadData().catch(() => null);
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadData().catch(() => null);
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   async function handleRequest() {
+    if (!selectedSlot) {
+      return;
+    }
     const data = await api.post('/student/appointments', { slotId: selectedSlot, purpose });
     setMessage(`Appointment requested: ${data.appointmentId}`);
+    setSelectedSlot('');
     await loadData();
   }
 
@@ -62,7 +82,7 @@ export function AppointmentsPage() {
             <span>Purpose</span>
             <input value={purpose} onChange={(event) => setPurpose(event.target.value)} />
           </label>
-          <button className="btn btn-primary" onClick={handleRequest} disabled={!selectedSlot}>Request appointment</button>
+          <button className="btn btn-primary" onClick={handleRequest} disabled={!selectedSlot || !purpose.trim()}>Request appointment</button>
         </article>
 
         <article className="data-panel">
@@ -72,7 +92,12 @@ export function AppointmentsPage() {
               <div key={appointment.id} className="mini-card">
                 <strong>{appointment.purpose}</strong>
                 <p>{new Date(appointment.scheduledAt).toLocaleString()}</p>
-                <p><RiskBadge level={appointment.status === 'approved' ? 'low' : 'moderate'} /> <span className="muted">{appointment.status}</span></p>
+                  <p>
+                    <span className={`status-pill status-${getAppointmentTone(appointment.status)}`}>
+                      {String(appointment.status || 'pending').toUpperCase()}
+                    </span>
+                    <span className="muted" style={{ marginLeft: 8 }}>{appointment.facilitatorName} - {appointment.assignedCollege}</span>
+                  </p>
                 {appointment.status !== 'cancelled' ? (
                   <button className="btn btn-secondary" onClick={() => handleCancel(appointment.id)}>Cancel</button>
                 ) : null}

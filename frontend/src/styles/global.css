@@ -543,6 +543,20 @@ th { color: var(--muted); font-size: 0.82rem; text-transform: uppercase; letter-
 .urgency-medium { background: rgba(29, 78, 216, 0.16); color: #1e3a8a; }
 .urgency-low { background: rgba(15, 118, 110, 0.16); color: #115e59; }
 
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.status-primary { background: rgba(29, 78, 216, 0.16); color: #1e3a8a; }
+.status-warning { background: rgba(217, 119, 6, 0.16); color: #92400e; }
+.status-danger { background: rgba(185, 28, 28, 0.16); color: #991b1b; }
+
 @media (max-width: 1024px) {
   .sidebar { position: static; width: auto; height: auto; overflow-y: visible; border-right: 0; border-bottom: 3px solid var(--primary); border-bottom: 3px solid var(--primary); }
   .content { margin-left: 0; margin-top: 0; }
