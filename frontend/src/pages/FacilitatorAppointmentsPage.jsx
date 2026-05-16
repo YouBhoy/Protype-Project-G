@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 
+function formatStatus(status) {
+  return String(status || 'pending').toLowerCase();
+}
+
 export function FacilitatorAppointmentsPage() {
   const [appointments, setAppointments] = useState([]);
   const [availability, setAvailability] = useState([]);
@@ -37,6 +41,9 @@ export function FacilitatorAppointmentsPage() {
   }
 
   async function updateStatus(id, status) {
+    setAppointments((current) => current.map((appointment) => (
+      appointment.id === id ? { ...appointment, status } : appointment
+    )));
     await api.patch(`/facilitator/appointments/${id}/status`, { status });
     await loadData();
   }
@@ -78,15 +85,17 @@ export function FacilitatorAppointmentsPage() {
               <div key={appointment.id} className="mini-card">
                 <div className="row-between">
                   <strong>{appointment.studentName || appointment.studentId}</strong>
-                  <span className="muted">{appointment.status}</span>
+                  <span className="status-pill status-primary">{formatStatus(appointment.status)}</span>
                 </div>
                 <p>{appointment.purpose}</p>
                 <p className="muted">{new Date(appointment.scheduledAt).toLocaleString()}</p>
-                <div className="button-row">
-                  <button className="btn btn-primary" onClick={() => updateStatus(appointment.id, 'accepted')}>Accept</button>
-                  <button className="btn btn-secondary" onClick={() => updateStatus(appointment.id, 'cancelled')}>Cancel</button>
-                  <button className="btn btn-secondary" onClick={() => updateStatus(appointment.id, 'completed')}>Complete</button>
-                </div>
+                {formatStatus(appointment.status) === 'pending' ? (
+                  <div className="button-row">
+                    <button className="btn btn-primary" onClick={() => updateStatus(appointment.id, 'accepted')}>Accept</button>
+                    <button className="btn btn-secondary" onClick={() => updateStatus(appointment.id, 'cancelled')}>Cancel</button>
+                    <button className="btn btn-secondary" onClick={() => updateStatus(appointment.id, 'completed')}>Complete</button>
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>
