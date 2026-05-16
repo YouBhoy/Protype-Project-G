@@ -19,7 +19,9 @@ export function FacilitatorAppointmentsPage() {
   const [availability, setAvailability] = useState([]);
   const [form, setForm] = useState({ slotDate: '', startTime: '09:00', endTime: '09:30' });
   const [selectedSlotId, setSelectedSlotId] = useState(null);
+  const [selectedSlotDetail, setSelectedSlotDetail] = useState(null);
   const [selectedAppointmentId, setSelectedAppointmentId] = useState(null);
+  const [selectedAppointmentDetail, setSelectedAppointmentDetail] = useState(null);
   const [appointmentForm, setAppointmentForm] = useState({ purpose: '', notes: '' });
 
   async function loadData() {
@@ -79,6 +81,7 @@ export function FacilitatorAppointmentsPage() {
   }
 
   function beginEditSlot(slot) {
+    setSelectedSlotDetail(slot);
     setSelectedSlotId(slot.id);
     setForm({
       slotDate: String(slot.slotDate || '').slice(0, 10),
@@ -87,21 +90,39 @@ export function FacilitatorAppointmentsPage() {
     });
   }
 
+  function beginOrganizeSlot(slot) {
+    setSelectedSlotDetail(slot);
+    setSelectedSlotId(null);
+  }
+
   async function deleteSlot(slotId) {
+    if (!window.confirm('Delete this availability slot?')) {
+      return;
+    }
+
     await api.del(`/facilitator/availability/${slotId}`);
     if (selectedSlotId === slotId) {
       setSelectedSlotId(null);
       setForm({ slotDate: '', startTime: '09:00', endTime: '09:30' });
     }
+    if (selectedSlotDetail?.id === slotId) {
+      setSelectedSlotDetail(null);
+    }
     await loadData();
   }
 
   function beginEditAppointment(appointment) {
+    setSelectedAppointmentDetail(appointment);
     setSelectedAppointmentId(appointment.id);
     setAppointmentForm({
       purpose: appointment.purpose || '',
       notes: appointment.notes || ''
     });
+  }
+
+  function beginOrganizeAppointment(appointment) {
+    setSelectedAppointmentDetail(appointment);
+    setSelectedAppointmentId(null);
   }
 
   async function saveAppointment() {
@@ -116,10 +137,17 @@ export function FacilitatorAppointmentsPage() {
   }
 
   async function deleteAppointment(appointmentId) {
+    if (!window.confirm('Delete this appointment from the queue?')) {
+      return;
+    }
+
     await api.del(`/facilitator/appointments/${appointmentId}`);
     if (selectedAppointmentId === appointmentId) {
       setSelectedAppointmentId(null);
       setAppointmentForm({ purpose: '', notes: '' });
+    }
+    if (selectedAppointmentDetail?.id === appointmentId) {
+      setSelectedAppointmentDetail(null);
     }
     await loadData();
   }
@@ -167,6 +195,20 @@ export function FacilitatorAppointmentsPage() {
           </div>
 
           <h4 className="subheading">Existing slots</h4>
+          {selectedSlotDetail ? (
+            <div className="mini-card" style={{ marginBottom: '12px' }}>
+              <div className="row-between">
+                <strong>Organizing slot</strong>
+                <span className="status-pill status-primary">{selectedSlotDetail.status}</span>
+              </div>
+              <p>{new Date(selectedSlotDetail.slotDate).toLocaleDateString()} {selectedSlotDetail.startTime} - {selectedSlotDetail.endTime}</p>
+              <p className="muted">Use Edit to load this slot into the form or Delete to remove it.</p>
+              <div className="button-row">
+                <button className="btn btn-secondary" onClick={() => beginEditSlot(selectedSlotDetail)}>Edit selected</button>
+                <button className="btn btn-secondary" onClick={() => setSelectedSlotDetail(null)}>Close</button>
+              </div>
+            </div>
+          ) : null}
           <div className="stack">
             {availability.map((slot) => (
               <div key={slot.id} className="mini-card">
@@ -175,7 +217,7 @@ export function FacilitatorAppointmentsPage() {
                   <strong>{slot.status}</strong>
                 </div>
                 <div className="button-row" style={{ marginTop: '12px' }}>
-                  <button className="btn btn-secondary" onClick={() => beginEditSlot(slot)}>Organize</button>
+                  <button className="btn btn-secondary" onClick={() => beginOrganizeSlot(slot)}>Organize</button>
                   <button className="btn btn-secondary" onClick={() => beginEditSlot(slot)}>Edit</button>
                   <button className="btn btn-secondary" onClick={() => deleteSlot(slot.id)} disabled={slot.status === 'reserved'} title={slot.status === 'reserved' ? 'Reserved slots cannot be deleted' : 'Delete slot'}>
                     Delete
@@ -188,6 +230,20 @@ export function FacilitatorAppointmentsPage() {
 
         <article className="data-panel">
           <h3>Appointment queue</h3>
+          {selectedAppointmentDetail ? (
+            <section className="mini-card" style={{ marginBottom: '16px' }}>
+              <div className="row-between">
+                <strong>Organizing appointment</strong>
+                <span className="status-pill status-primary">{formatStatus(selectedAppointmentDetail.status)}</span>
+              </div>
+              <p>{selectedAppointmentDetail.purpose}</p>
+              <p className="muted">{selectedAppointmentDetail.studentName || selectedAppointmentDetail.studentId} - {new Date(selectedAppointmentDetail.scheduledAt).toLocaleString()}</p>
+              <div className="button-row">
+                <button className="btn btn-secondary" onClick={() => beginEditAppointment(selectedAppointmentDetail)}>Edit selected</button>
+                <button className="btn btn-secondary" onClick={() => setSelectedAppointmentDetail(null)}>Close</button>
+              </div>
+            </section>
+          ) : null}
           {selectedAppointmentId ? (
             <section className="data-panel" style={{ marginBottom: '16px', boxShadow: 'none' }}>
               <h4 className="subheading">Edit appointment</h4>
@@ -223,6 +279,7 @@ export function FacilitatorAppointmentsPage() {
                   <span className="status-pill status-primary">{formatStatus(appointment.status)}</span>
                 </div>
                 <p>{appointment.purpose}</p>
+                {appointment.notes ? <p className="muted">Notes: {appointment.notes}</p> : null}
                 <p className="muted">{new Date(appointment.scheduledAt).toLocaleString()}</p>
                 {formatStatus(appointment.status) === 'pending' ? (
                   <div className="button-row">
@@ -232,7 +289,7 @@ export function FacilitatorAppointmentsPage() {
                   </div>
                 ) : null}
                 <div className="button-row" style={{ marginTop: '12px' }}>
-                  <button className="btn btn-secondary" onClick={() => beginEditAppointment(appointment)}>Organize</button>
+                  <button className="btn btn-secondary" onClick={() => beginOrganizeAppointment(appointment)}>Organize</button>
                   <button className="btn btn-secondary" onClick={() => beginEditAppointment(appointment)}>Edit</button>
                   <button className="btn btn-secondary" onClick={() => deleteAppointment(appointment.id)}>Delete</button>
                 </div>

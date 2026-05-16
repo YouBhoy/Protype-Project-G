@@ -154,7 +154,7 @@ async function deleteAvailabilitySlot(facilitatorId, slotId) {
 
 async function getFacilitatorAppointments(facilitatorId) {
   return query(
-    `SELECT a.id, a.purpose, a.scheduled_at AS scheduledAt, a.status, a.updated_at AS updatedAt,
+    `SELECT a.id, a.purpose, a.notes, a.scheduled_at AS scheduledAt, a.status, a.updated_at AS updatedAt,
             s.student_id AS studentId, s.name AS studentName, s.email AS studentEmail,
             s.college, s.consent_flag AS consentFlag
      FROM appointments a
