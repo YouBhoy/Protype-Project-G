@@ -81,7 +81,7 @@ export function AuthProvider({ children }) {
     return () => {
       active = false;
     };
-  }, [token]);
+  }, [token, location?.pathname]);
 
   async function loginStudent(credentials) {
     const data = await api.post('/auth/student/login', credentials);
